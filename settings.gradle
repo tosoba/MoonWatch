@@ -10,3 +10,4 @@ rootProject.name = "MoonWatch"
 include ':app'
 include ':api-pancakeswap'
 include ':core-android'
+include ':db'
