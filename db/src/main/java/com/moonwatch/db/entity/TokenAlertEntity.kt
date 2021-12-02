@@ -4,7 +4,7 @@ import androidx.room.*
 import java.util.*
 
 @Entity(
-    tableName = "token_value",
+    tableName = "token_alert",
     foreignKeys =
         [
             ForeignKey(
@@ -17,15 +17,17 @@ import java.util.*
     indices =
         [
             Index(value = ["address"]),
-            Index(value = ["updated_at"]),
+            Index(value = ["created_at"]),
+            Index(value = ["last_fired_at"]),
         ],
 )
-data class TokenValueEntity(
+data class TokenAlertEntity(
     val address: String,
-    val usd: Double,
-    val bnb: Double? = null,
-    val eth: Double? = null,
-    @ColumnInfo(name = "updated_at") val updatedAt: Date
+    val active: Boolean,
+    @ColumnInfo(name = "created_at") val createdAt: Date,
+    @ColumnInfo(name = "last_fired_at") val lastFiredAt: Date,
+    @ColumnInfo(name = "sell_price_target_usd") val sellPriceTargetUsd: Double?,
+    @ColumnInfo(name = "buy_price_target_usd") val buyPriceTargetUsd: Double?,
 ) {
   @PrimaryKey(autoGenerate = true) var id: Long = 0
 }

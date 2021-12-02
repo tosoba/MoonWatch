@@ -3,6 +3,7 @@ package com.moonwatch.db.di
 import android.content.Context
 import com.moonwatch.core.android.ext.buildRoom
 import com.moonwatch.db.MoonwatchDatabase
+import com.moonwatch.db.dao.AlertDao
 import com.moonwatch.db.dao.TokenDao
 import dagger.Module
 import dagger.Provides
@@ -19,5 +20,6 @@ object DatabaseModule {
   fun overpassDatabase(@ApplicationContext context: Context): MoonwatchDatabase =
       context.buildRoom()
 
+  @Provides fun alertDao(db: MoonwatchDatabase): AlertDao = db.alertDao()
   @Provides fun tokenDao(db: MoonwatchDatabase): TokenDao = db.tokenDao()
 }

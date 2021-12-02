@@ -3,6 +3,7 @@ package com.moonwatch
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.*
+import com.moonwatch.repo.worker.DeleteOldTokenValuesWorker
 import com.moonwatch.repo.worker.TokenValuesSyncWorker
 import dagger.hilt.android.HiltAndroidApp
 import java.util.concurrent.TimeUnit
@@ -15,6 +16,7 @@ class MoonwatchApp : Application(), Configuration.Provider {
   override fun onCreate() {
     super.onCreate()
     enqueueTokenValuesSync()
+    enqueueDeleteOldTokenValues()
   }
 
   override fun getWorkManagerConfiguration() =
@@ -32,6 +34,18 @@ class MoonwatchApp : Application(), Configuration.Provider {
     WorkManager.getInstance(this)
         .enqueueUniquePeriodicWork(
             TokenValuesSyncWorker::class.simpleName!!,
+            ExistingPeriodicWorkPolicy.KEEP,
+            periodicSyncDataWork)
+  }
+
+  private fun enqueueDeleteOldTokenValues() {
+    val periodicSyncDataWork =
+        PeriodicWorkRequest.Builder(TokenValuesSyncWorker::class.java, 1, TimeUnit.DAYS)
+            .addTag(DeleteOldTokenValuesWorker::class.simpleName!!)
+            .build()
+    WorkManager.getInstance(this)
+        .enqueueUniquePeriodicWork(
+            DeleteOldTokenValuesWorker::class.simpleName!!,
             ExistingPeriodicWorkPolicy.KEEP,
             periodicSyncDataWork)
   }
