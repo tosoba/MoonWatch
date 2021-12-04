@@ -1,6 +1,6 @@
 package com.moonwatch.repo
 
-import com.moonwatch.core.model.TokenWithValue
+import com.moonwatch.core.model.ITokenWithValue
 import com.moonwatch.core.repo.ITokenRepo
 import com.moonwatch.db.dao.TokenDao
 import dagger.Reusable
@@ -10,5 +10,5 @@ import kotlinx.coroutines.flow.emptyFlow
 
 @Reusable
 class TokenRepo @Inject constructor(private val dao: TokenDao) : ITokenRepo {
-  override fun getTokensWithValue(): Flow<List<TokenWithValue>> = emptyFlow()
+  override fun getTokensWithValue(): Flow<List<ITokenWithValue>> = emptyFlow()
 }

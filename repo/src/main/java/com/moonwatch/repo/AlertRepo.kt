@@ -1,6 +1,6 @@
 package com.moonwatch.repo
 
-import com.moonwatch.core.model.TokenAlertWithValue
+import com.moonwatch.core.model.ITokenAlertWithValue
 import com.moonwatch.core.repo.IAlertRepo
 import com.moonwatch.db.dao.AlertDao
 import dagger.Reusable
@@ -10,5 +10,5 @@ import kotlinx.coroutines.flow.emptyFlow
 
 @Reusable
 class AlertRepo @Inject constructor(private val dao: AlertDao) : IAlertRepo {
-  override fun getTokenAlertsWithValue(): Flow<List<TokenAlertWithValue>> = emptyFlow()
+  override fun getTokenAlertsWithValue(): Flow<List<ITokenAlertWithValue>> = emptyFlow()
 }

@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import com.moonwatch.db.entity.TokenAlertEntity
+import com.moonwatch.db.result.TokenAlertWithLatestValue
 import java.util.*
 import kotlinx.coroutines.flow.Flow
 
@@ -25,4 +26,18 @@ interface AlertDao {
 
   @Query("UPDATE token_alert SET active = CASE WHEN active = 0 THEN 1 ELSE 0 END WHERE id = :id")
   suspend fun updateToggleAlertActiveById(id: Long)
+
+  @Query(
+      """SELECT a.*, 
+    t.address AS token_address, t.name AS token_name, 
+    t.symbol AS token_symbol, t.chain AS token_chain,
+    v.address AS value_address, v.usd AS value_usd,
+    v.bnb AS value_bnb, v.eth AS value_eth,
+    v.updated_at AS value_updated_at, v.id AS value_id
+    FROM token_alert a 
+    INNER JOIN token AS t ON a.address = t.address 
+    INNER JOIN token_value v ON v.address = t.address 
+    WHERE v.updated_at = (SELECT MAX(updated_at) FROM token_value WHERE address = t.address) 
+    ORDER BY v.usd DESC""")
+  fun selectTokenAlertsWithLatestValueOrderedByCreatedAt(): Flow<List<TokenAlertWithLatestValue>>
 }

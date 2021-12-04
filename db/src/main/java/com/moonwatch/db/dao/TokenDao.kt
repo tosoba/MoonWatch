@@ -7,7 +7,9 @@ import androidx.room.Query
 import com.moonwatch.core.model.Chain
 import com.moonwatch.db.entity.TokenEntity
 import com.moonwatch.db.entity.TokenValueEntity
+import com.moonwatch.db.result.TokenWithLatestValue
 import java.util.*
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TokenDao {
@@ -20,4 +22,15 @@ interface TokenDao {
 
   @Query("DELETE FROM token_value WHERE updated_at < :timestamp")
   suspend fun deleteTokenValuesOlderThen(timestamp: Date)
+
+  @Query(
+      """SELECT t.*, 
+    v.address AS value_address, v.usd AS value_usd,
+    v.bnb AS value_bnb, v.eth AS value_eth,
+    v.updated_at AS value_updated_at, v.id AS value_id
+    FROM token AS t  
+    INNER JOIN token_value v ON v.address = t.address 
+    WHERE v.updated_at = (SELECT MAX(updated_at) FROM token_value WHERE address = t.address) 
+    ORDER BY v.usd DESC""")
+  fun selectTokensWithLatestValueOrderedByUsdDesc(): Flow<List<TokenWithLatestValue>>
 }
