@@ -53,23 +53,29 @@ constructor(
       return if (bscTokens.isEmpty()) Result.success() else Result.failure()
     }
 
-    val thresholdPercentage = .15 // TODO: move to shared prefs + split for buy/sell
-    val alerts = alertDao.selectActiveTokenAlerts()
+    val groupedAlerts = alertDao.selectActiveTokenAlerts().groupBy(TokenAlertEntity::address)
     val alertIdsToFire = mutableListOf<Long>()
-    val silentAlerts = mutableListOf<TokenAlertEntity>()
-    val loudAlerts = mutableListOf<TokenAlertEntity>()
-    alerts.forEach { alert ->
-      if (!updatedValues.containsKey(alert.address)) return@forEach
-      val updatedValue = updatedValues[alert.address]
-
-      val sellPriceTarget = alert.sellPriceTargetUsd
-      if (sellPriceTarget != null) {}
-
-      val buyPriceTarget = alert.buyPriceTargetUsd
-      if (buyPriceTarget != null) {}
+    val alertsToFire = mutableListOf<TokenAlertEntity>()
+    updatedValues.forEach { (address, value) ->
+      val alerts = groupedAlerts[address] ?: return@forEach
+      alerts
+          .filter { alert -> alert.sellPriceTargetUsd?.let { it > value.usd } ?: false }
+          .maxByOrNull { it.sellPriceTargetUsd!! }
+          ?.let {
+            alertIdsToFire.add(it.id)
+            alertsToFire.add(it)
+          }
+      alerts
+          .filter { alert -> alert.buyPriceTargetUsd?.let { it < value.usd } ?: false }
+          .minByOrNull { it.buyPriceTargetUsd!! }
+          ?.let {
+            alertIdsToFire.add(it.id)
+            alertsToFire.add(it)
+          }
     }
 
     if (alertIdsToFire.isNotEmpty()) {
+      // TODO: create notifications (wake up device)
       alertDao.updateLastFiredAtForAlerts(alertIdsToFire, Date())
     }
 
