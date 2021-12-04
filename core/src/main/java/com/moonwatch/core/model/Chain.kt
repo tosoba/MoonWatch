@@ -1,4 +1,4 @@
-package com.moonwatch.db.entity
+package com.moonwatch.core.model
 
 enum class Chain {
   BSC,

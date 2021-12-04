@@ -38,6 +38,7 @@ android {
 dependencies {
     implementation project(':api-pancakeswap')
     implementation project(':db')
+    implementation project(':core')
     implementation project(':core-android')
 
     implementation 'androidx.core:core-ktx:1.7.0'

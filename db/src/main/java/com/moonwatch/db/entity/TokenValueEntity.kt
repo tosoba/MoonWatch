@@ -1,6 +1,7 @@
 package com.moonwatch.db.entity
 
 import androidx.room.*
+import com.moonwatch.core.model.ITokenValue
 import java.util.*
 
 @Entity(
@@ -21,11 +22,11 @@ import java.util.*
         ],
 )
 data class TokenValueEntity(
-    val address: String,
-    val usd: Double,
+    override val address: String,
+    override val usd: Double,
     val bnb: Double? = null,
     val eth: Double? = null,
-    @ColumnInfo(name = "updated_at") val updatedAt: Date
-) {
+    @ColumnInfo(name = "updated_at") override val updatedAt: Date
+) : ITokenValue {
   @PrimaryKey(autoGenerate = true) var id: Long = 0
 }

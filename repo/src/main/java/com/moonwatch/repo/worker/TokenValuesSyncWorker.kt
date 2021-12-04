@@ -7,7 +7,7 @@ import androidx.work.WorkerParameters
 import com.moonwatch.api.pancakeswap.PancakeswapEndpoints
 import com.moonwatch.db.dao.AlertDao
 import com.moonwatch.db.dao.TokenDao
-import com.moonwatch.db.entity.Chain
+import com.moonwatch.core.model.Chain
 import com.moonwatch.db.entity.TokenAlertEntity
 import com.moonwatch.db.entity.TokenValueEntity
 import dagger.assisted.Assisted

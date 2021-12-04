@@ -1,7 +1,7 @@
 package com.moonwatch.db
 
 import androidx.room.TypeConverter
-import com.moonwatch.db.entity.Chain
+import com.moonwatch.core.model.Chain
 import java.util.*
 
 object Converters {
