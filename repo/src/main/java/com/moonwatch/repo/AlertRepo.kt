@@ -6,9 +6,9 @@ import com.moonwatch.db.dao.AlertDao
 import dagger.Reusable
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 
 @Reusable
 class AlertRepo @Inject constructor(private val dao: AlertDao) : IAlertRepo {
-  override fun getTokenAlertsWithValue(): Flow<List<ITokenAlertWithValue>> = emptyFlow()
+  override fun getTokenAlertsWithValue(): Flow<List<ITokenAlertWithValue>> =
+      dao.selectTokenAlertsWithLatestValueOrderedByCreatedAt()
 }

@@ -4,36 +4,60 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
+import com.moonwatch.core.model.ITokenAlertWithValue
+import com.moonwatch.core.model.ITokenWithValue
+import com.moonwatch.core.usecase.GetAlertsFlow
+import com.moonwatch.core.usecase.GetTokensFlow
 import com.moonwatch.ui.theme.MoonWatchTheme
+import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
+import javax.inject.Inject
 import kotlinx.coroutines.launch
 
+@ExperimentalMaterialApi
 @ExperimentalPagerApi
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+  @Inject internal lateinit var getAlertsFlow: GetAlertsFlow
+  @Inject internal lateinit var getTokensFlow: GetTokensFlow
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent {
-      MoonWatchTheme { Surface(color = MaterialTheme.colors.background) { MainScaffold() } }
+      MoonWatchTheme {
+        Surface(color = MaterialTheme.colors.background) {
+          val alerts = getAlertsFlow().collectAsState(initial = emptyList())
+          val tokens = getTokensFlow().collectAsState(initial = emptyList())
+          MainScaffold(alerts.value, tokens.value)
+        }
+      }
     }
   }
 }
 
+@ExperimentalMaterialApi
 @ExperimentalPagerApi
 @Composable
-private fun MainScaffold() {
+private fun MainScaffold(alerts: List<ITokenAlertWithValue>, tokens: List<ITokenWithValue>) {
   val scope = rememberCoroutineScope()
   val pageState = rememberPagerState()
   val scaffoldState = rememberScaffoldState()
@@ -62,23 +86,39 @@ private fun MainScaffold() {
             },
         )
       },
+      floatingActionButton = { FloatingActionButton(onClick = {}) { Icon(Icons.Filled.Add, "") } },
   ) {
     HorizontalPager(state = pageState, count = items.size) { page ->
-      val item = items[page]
-      Image(
-          painterResource(id = item.drawableResource),
-          contentDescription = item.title,
-          modifier = Modifier.fillMaxSize(),
-          contentScale = ContentScale.Crop,
-      )
+      when (items[page]) {
+        MainBottomNavigationItem.TOKENS -> TokensList(tokens = tokens)
+        MainBottomNavigationItem.ALERTS -> AlertsList(alerts = alerts)
+      }
     }
   }
 }
 
-@Preview(showBackground = true)
+@ExperimentalMaterialApi
 @Composable
-fun DefaultPreview() {
-  MoonWatchTheme {}
+private fun AlertsList(alerts: List<ITokenAlertWithValue>) {
+  if (alerts.isEmpty()) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+      Text(text = "No saved alerts.", textAlign = TextAlign.Center)
+    }
+  } else {
+    LazyColumn { items(alerts) { ListItem { it.alert.address } } }
+  }
+}
+
+@ExperimentalMaterialApi
+@Composable
+private fun TokensList(tokens: List<ITokenWithValue>) {
+  if (tokens.isEmpty()) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+      Text(text = "No saved tokens.", textAlign = TextAlign.Center)
+    }
+  } else {
+    LazyColumn { items(tokens) { ListItem { it.token.address } } }
+  }
 }
 
 private enum class MainBottomNavigationItem(@DrawableRes val drawableResource: Int) {
@@ -90,4 +130,10 @@ private enum class MainBottomNavigationItem(@DrawableRes val drawableResource: I
         name.lowercase(Locale.getDefault()).replaceFirstChar {
           if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
         }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DefaultPreview() {
+  MoonWatchTheme {}
 }
