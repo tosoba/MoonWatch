@@ -5,4 +5,5 @@ import kotlinx.coroutines.flow.Flow
 
 interface ITokenRepo {
   fun getTokensWithValue(): Flow<List<ITokenWithValue>>
+  suspend fun getTokenWithValueByAddress(address: String): ITokenWithValue
 }
