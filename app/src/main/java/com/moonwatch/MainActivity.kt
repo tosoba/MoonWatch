@@ -4,8 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
@@ -20,6 +19,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
@@ -57,41 +58,67 @@ class MainActivity : ComponentActivity() {
 @ExperimentalMaterialApi
 @ExperimentalPagerApi
 @Composable
-private fun MainScaffold(alerts: List<ITokenAlertWithValue>, tokens: List<ITokenWithValue>) {
+private fun MainScaffold(
+    alerts: List<ITokenAlertWithValue>,
+    tokens: List<ITokenWithValue>,
+    viewModel: MainViewModel = hiltViewModel()
+) {
   val scope = rememberCoroutineScope()
   val pageState = rememberPagerState()
   val scaffoldState = rememberScaffoldState()
+  val modalBottomSheetState =
+      rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
   val items = MainBottomNavigationItem.values()
-  Scaffold(
-      scaffoldState = scaffoldState,
-      bottomBar = {
-        BottomAppBar(
-            backgroundColor = MaterialTheme.colors.primary,
-            content = {
-              items.forEachIndexed { index, item ->
-                BottomNavigationItem(
-                    icon = {
-                      Icon(
-                          painterResource(id = item.drawableResource),
-                          contentDescription = item.title,
-                      )
-                    },
-                    selected = index == pageState.currentPage,
-                    onClick = { scope.launch { pageState.animateScrollToPage(index) } },
-                    selectedContentColor = Color.Magenta,
-                    unselectedContentColor = Color.LightGray,
-                    label = { Text(text = item.title) },
-                )
-              }
-            },
-        )
+  ModalBottomSheetLayout(
+      sheetContent = {
+        Column(modifier = Modifier.padding(10.dp)) {
+          val tokenAddress = viewModel.tokenAddress.collectAsState(initial = "")
+          OutlinedTextField(
+              value = tokenAddress.value,
+              onValueChange = viewModel::setTokenAddress,
+              label = { Text("Address") },
+              singleLine = true,
+              modifier = Modifier.fillMaxWidth(),
+          )
+        }
       },
-      floatingActionButton = { FloatingActionButton(onClick = {}) { Icon(Icons.Filled.Add, "") } },
+      sheetState = modalBottomSheetState,
   ) {
-    HorizontalPager(state = pageState, count = items.size) { page ->
-      when (items[page]) {
-        MainBottomNavigationItem.TOKENS -> TokensList(tokens = tokens)
-        MainBottomNavigationItem.ALERTS -> AlertsList(alerts = alerts)
+    Scaffold(
+        scaffoldState = scaffoldState,
+        bottomBar = {
+          BottomAppBar(
+              backgroundColor = MaterialTheme.colors.primary,
+              content = {
+                items.forEachIndexed { index, item ->
+                  BottomNavigationItem(
+                      icon = {
+                        Icon(
+                            painterResource(id = item.drawableResource),
+                            contentDescription = item.title,
+                        )
+                      },
+                      selected = index == pageState.currentPage,
+                      onClick = { scope.launch { pageState.animateScrollToPage(index) } },
+                      selectedContentColor = Color.Magenta,
+                      unselectedContentColor = Color.LightGray,
+                      label = { Text(text = item.title) },
+                  )
+                }
+              },
+          )
+        },
+        floatingActionButton = {
+          FloatingActionButton(onClick = { scope.launch { modalBottomSheetState.show() } }) {
+            Icon(Icons.Filled.Add, "")
+          }
+        },
+    ) {
+      HorizontalPager(state = pageState, count = items.size) { page ->
+        when (items[page]) {
+          MainBottomNavigationItem.TOKENS -> TokensList(tokens = tokens)
+          MainBottomNavigationItem.ALERTS -> AlertsList(alerts = alerts)
+        }
       }
     }
   }
