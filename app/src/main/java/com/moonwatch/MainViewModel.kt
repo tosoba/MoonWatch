@@ -7,18 +7,26 @@ import androidx.lifecycle.viewModelScope
 import com.moonwatch.core.android.model.*
 import com.moonwatch.core.ext.withLatestFrom
 import com.moonwatch.core.model.ITokenWithValue
+import com.moonwatch.core.usecase.GetAlertsFlow
 import com.moonwatch.core.usecase.GetTokenWithValue
-import com.moonwatch.core.usecase.SaveToken
+import com.moonwatch.core.usecase.GetTokensFlow
+import com.moonwatch.core.usecase.SaveTokenWithValue
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 
+@ExperimentalCoroutinesApi
+@FlowPreview
 @HiltViewModel
 class MainViewModel
 @Inject
 constructor(
     private val getTokenWithValue: GetTokenWithValue,
-    private val saveToken: SaveToken,
+    private val saveTokenWithValue: SaveTokenWithValue,
+    val getAlertsFlow: GetAlertsFlow,
+    val getTokensFlow: GetTokensFlow,
 ) : ViewModel() {
   private val _tokenAddress = MutableStateFlow("")
   val tokenAddress: Flow<String>
@@ -32,15 +40,22 @@ constructor(
 
   init {
     merge(
-            tokenAddress
-                .drop(1)
-                .filter(::isBscAddressValid)
-                .debounce(timeoutMillis = 500L)
-                .distinctUntilChanged(),
-            _toggleRetryLoadingToken.debounce(500L).withLatestFrom(
-                    tokenAddress.filter(::isBscAddressValid)) { _, address -> address },
+            tokenAddress.drop(1).debounce(timeoutMillis = 500L).distinctUntilChanged(),
+            _toggleRetryLoadingToken.debounce(500L).withLatestFrom(tokenAddress) { _, address ->
+              address
+            },
         )
         .transformLatest { address ->
+          if (address.isEmpty()) {
+            emit(Empty)
+            return@transformLatest
+          }
+
+          if (!isBscAddressValid(address)) {
+            emit(FailedFirst(InvalidAddressException))
+            return@transformLatest
+          }
+
           emit(LoadingFirst)
           try {
             emit(Ready(getTokenWithValue(address)))
@@ -63,8 +78,14 @@ constructor(
   suspend fun saveCurrentToken() {
     val currentTokenWithValue = _tokenWithValue.value
     if (currentTokenWithValue !is Ready<ITokenWithValue>) throw IllegalStateException()
-    saveToken(currentTokenWithValue.value.token)
+    saveTokenWithValue(
+        token = currentTokenWithValue.value.token,
+        value = currentTokenWithValue.value.value,
+    )
   }
 
+  // TODO: regex
   private fun isBscAddressValid(address: String) = address.length == 42 && address.startsWith("0x")
 }
+
+object InvalidAddressException : IllegalArgumentException()

@@ -8,6 +8,10 @@ data class PancakeswapTokenResponse(
     @field:Json(name = "updated_at") val updatedAtMillis: Long
 ) : ITokenValue, ITokenWithValue {
   var tokenAddress: String? = null
+    set(value) {
+      field = value
+      token.tokenAddress = value
+    }
   override val address: String
     get() = requireNotNull(tokenAddress) { "Token address is not set." }
 

@@ -29,4 +29,8 @@ data class TokenValueEntity(
     @ColumnInfo(name = "updated_at") override val updatedAt: Date
 ) : ITokenValue {
   @PrimaryKey(autoGenerate = true) var id: Long = 0
+
+  constructor(
+      other: ITokenValue
+  ) : this(address = other.address, usd = other.usd, updatedAt = other.updatedAt)
 }

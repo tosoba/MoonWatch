@@ -2,6 +2,8 @@ package com.moonwatch
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.*
@@ -10,13 +12,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -25,55 +27,53 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.moonwatch.core.android.model.*
-import com.moonwatch.core.model.ITokenAlertWithValue
-import com.moonwatch.core.model.ITokenWithValue
-import com.moonwatch.core.usecase.GetAlertsFlow
-import com.moonwatch.core.usecase.GetTokensFlow
 import com.moonwatch.ui.theme.MoonWatchTheme
+import com.moonwatch.ui.theme.Typography
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
-import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.launch
 
+@ExperimentalCoroutinesApi
 @ExperimentalMaterialApi
 @ExperimentalPagerApi
+@FlowPreview
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-  @Inject internal lateinit var getAlertsFlow: GetAlertsFlow
-  @Inject internal lateinit var getTokensFlow: GetTokensFlow
-
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent {
-      MoonWatchTheme {
-        Surface(color = MaterialTheme.colors.background) {
-          val alerts = getAlertsFlow().collectAsState(initial = emptyList())
-          val tokens = getTokensFlow().collectAsState(initial = emptyList())
-          MainScaffold(alerts.value, tokens.value)
-        }
-      }
+      MoonWatchTheme { Surface(color = MaterialTheme.colors.background) { MainScaffold() } }
     }
   }
 }
 
+@ExperimentalCoroutinesApi
 @ExperimentalMaterialApi
 @ExperimentalPagerApi
+@FlowPreview
 @Composable
-private fun MainScaffold(
-    alerts: List<ITokenAlertWithValue>,
-    tokens: List<ITokenWithValue>,
-    viewModel: MainViewModel = hiltViewModel()
-) {
+private fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
   val scope = rememberCoroutineScope()
   val pageState = rememberPagerState()
   val scaffoldState = rememberScaffoldState()
   val modalBottomSheetState =
       rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
   val items = MainBottomNavigationItem.values()
+  BackHandler(enabled = modalBottomSheetState.isVisible) {
+    scope.launch { modalBottomSheetState.hide() }
+  }
   ModalBottomSheetLayout(
       sheetContent = {
-        Column(modifier = Modifier.padding(10.dp)) {
-          Text(text = "Add a new token")
+        Column(modifier = Modifier.padding(15.dp)) {
+          Text(
+              text = "Add a new token",
+              style =
+                  Typography.h6.copy(
+                      color = MaterialTheme.colors.primary, fontWeight = FontWeight.Bold),
+              modifier = Modifier.padding(horizontal = 5.dp),
+          )
           val tokenAddress = viewModel.tokenAddress.collectAsState(initial = "")
           OutlinedTextField(
               value = tokenAddress.value,
@@ -108,11 +108,21 @@ private fun MainScaffold(
                   modifier = Modifier.fillMaxWidth(),
               )
               OutlinedButton(
-                  onClick = { scope.launch { viewModel.saveCurrentToken() } },
+                  onClick = {
+                    scope.launch {
+                      viewModel.saveCurrentToken()
+                      modalBottomSheetState.hide()
+                    }
+                  },
                   modifier = Modifier.fillMaxWidth(),
               ) { Text(text = "Save") }
             }
-            is LoadingInProgress -> CircularProgressIndicator()
+            is LoadingInProgress -> {
+              Box(
+                  contentAlignment = Alignment.Center,
+                  modifier = Modifier.fillMaxWidth().padding(10.dp),
+              ) { CircularProgressIndicator() }
+            }
             else -> return@Column
           }
         }
@@ -121,6 +131,15 @@ private fun MainScaffold(
   ) {
     Scaffold(
         scaffoldState = scaffoldState,
+        topBar = {
+          TopAppBar {
+            Text(
+                text = "MoonWatch",
+                style = Typography.h6.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.padding(horizontal = 5.dp),
+            )
+          }
+        },
         bottomBar = {
           BottomAppBar(
               backgroundColor = MaterialTheme.colors.primary,
@@ -129,7 +148,7 @@ private fun MainScaffold(
                   BottomNavigationItem(
                       icon = {
                         Icon(
-                            painterResource(id = item.drawableResource),
+                            painter = painterResource(id = item.drawableResource),
                             contentDescription = item.title,
                         )
                       },
@@ -151,35 +170,66 @@ private fun MainScaffold(
     ) {
       HorizontalPager(state = pageState, count = items.size) { page ->
         when (items[page]) {
-          MainBottomNavigationItem.TOKENS -> TokensList(tokens = tokens)
-          MainBottomNavigationItem.ALERTS -> AlertsList(alerts = alerts)
+          MainBottomNavigationItem.TOKENS -> TokensList()
+          MainBottomNavigationItem.ALERTS -> AlertsList()
         }
       }
     }
   }
 }
 
+@ExperimentalCoroutinesApi
 @ExperimentalMaterialApi
+@ExperimentalPagerApi
+@FlowPreview
 @Composable
-private fun AlertsList(alerts: List<ITokenAlertWithValue>) {
-  if (alerts.isEmpty()) {
+private fun AlertsList(viewModel: MainViewModel = hiltViewModel()) {
+  val alerts = viewModel.getAlertsFlow().collectAsState(initial = emptyList())
+  if (alerts !is Ready<*> || alerts.value.isEmpty()) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
       Text(text = "No saved alerts.", textAlign = TextAlign.Center)
     }
   } else {
-    LazyColumn { items(alerts) { ListItem { it.alert.address } } }
+    LazyColumn { items(alerts.value) { ListItem { it.alert.address } } }
   }
 }
 
+@ExperimentalCoroutinesApi
 @ExperimentalMaterialApi
+@ExperimentalPagerApi
+@FlowPreview
 @Composable
-private fun TokensList(tokens: List<ITokenWithValue>) {
-  if (tokens.isEmpty()) {
+private fun TokensList(viewModel: MainViewModel = hiltViewModel()) {
+  val tokens = viewModel.getTokensFlow().collectAsState(initial = emptyList())
+  if (tokens !is Ready<*> || tokens.value.isEmpty()) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
       Text(text = "No saved tokens.", textAlign = TextAlign.Center)
     }
   } else {
-    LazyColumn { items(tokens) { ListItem { it.token.address } } }
+    LazyColumn { items(tokens.value) { ListItem { it.token.address } } }
+  }
+}
+
+@Composable
+private fun BackHandler(enabled: Boolean = true, onBack: () -> Unit) {
+  val currentOnBack by rememberUpdatedState(onBack)
+  val backCallback = remember {
+    object : OnBackPressedCallback(enabled) {
+      override fun handleOnBackPressed() {
+        currentOnBack()
+      }
+    }
+  }
+  SideEffect { backCallback.isEnabled = enabled }
+  val backDispatcher =
+      checkNotNull(LocalOnBackPressedDispatcherOwner.current) {
+            "No OnBackPressedDispatcherOwner was provided via LocalOnBackPressedDispatcherOwner"
+          }
+          .onBackPressedDispatcher
+  val lifecycleOwner = LocalLifecycleOwner.current
+  DisposableEffect(lifecycleOwner, backDispatcher) {
+    backDispatcher.addCallback(lifecycleOwner, backCallback)
+    onDispose(backCallback::remove)
   }
 }
 

@@ -1,9 +1,6 @@
 package com.moonwatch.db.dao
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
+import androidx.room.*
 import com.moonwatch.core.model.Chain
 import com.moonwatch.db.entity.TokenEntity
 import com.moonwatch.db.entity.TokenValueEntity
@@ -14,6 +11,14 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface TokenDao {
   @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertToken(token: TokenEntity)
+
+  @Insert suspend fun insertTokenValue(value: TokenValueEntity)
+
+  @Transaction
+  suspend fun insertTokenWithValue(token: TokenEntity, value: TokenValueEntity) {
+    insertToken(token)
+    insertTokenValue(value)
+  }
 
   @Insert suspend fun insertTokenValues(tokenValues: List<TokenValueEntity>)
 
