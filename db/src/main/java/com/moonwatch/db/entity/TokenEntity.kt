@@ -20,4 +20,13 @@ data class TokenEntity(
     override val name: String,
     override val symbol: String,
     override val chain: Chain
-) : IToken
+) : IToken {
+  constructor(
+      other: IToken
+  ) : this(
+      other.address,
+      other.name,
+      other.symbol,
+      other.chain,
+  )
+}

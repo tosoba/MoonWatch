@@ -24,6 +24,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
+import com.moonwatch.core.android.model.*
 import com.moonwatch.core.model.ITokenAlertWithValue
 import com.moonwatch.core.model.ITokenWithValue
 import com.moonwatch.core.usecase.GetAlertsFlow
@@ -72,14 +73,48 @@ private fun MainScaffold(
   ModalBottomSheetLayout(
       sheetContent = {
         Column(modifier = Modifier.padding(10.dp)) {
+          Text(text = "Add a new token")
           val tokenAddress = viewModel.tokenAddress.collectAsState(initial = "")
           OutlinedTextField(
               value = tokenAddress.value,
               onValueChange = viewModel::setTokenAddress,
               label = { Text("Address") },
               singleLine = true,
+              isError = viewModel.tokenWithValue.value is Failed,
               modifier = Modifier.fillMaxWidth(),
           )
+          when (val tokenWithValue = viewModel.tokenWithValue.value) {
+            is Failed -> {
+              OutlinedButton(
+                  onClick = { scope.launch { viewModel.retryLoadingToken() } },
+                  modifier = Modifier.fillMaxWidth(),
+              ) { Text(text = "Retry") }
+            }
+            is Ready -> {
+              OutlinedTextField(
+                  value = tokenWithValue.value.token.name,
+                  onValueChange = {},
+                  label = { Text("Name") },
+                  singleLine = true,
+                  readOnly = true,
+                  modifier = Modifier.fillMaxWidth(),
+              )
+              OutlinedTextField(
+                  value = tokenWithValue.value.value.usd.toString(),
+                  onValueChange = {},
+                  label = { Text("Value in USD") },
+                  singleLine = true,
+                  readOnly = true,
+                  modifier = Modifier.fillMaxWidth(),
+              )
+              OutlinedButton(
+                  onClick = { scope.launch { viewModel.saveCurrentToken() } },
+                  modifier = Modifier.fillMaxWidth(),
+              ) { Text(text = "Save") }
+            }
+            is LoadingInProgress -> CircularProgressIndicator()
+            else -> return@Column
+          }
         }
       },
       sheetState = modalBottomSheetState,

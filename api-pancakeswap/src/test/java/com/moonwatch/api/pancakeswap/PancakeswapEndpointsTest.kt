@@ -10,6 +10,6 @@ class PancakeswapEndpointsTest {
 
   @Test
   fun getTokenTest() {
-    runBlocking { println(endpoints.getToken("0x969f330c1419130b208f258f517af73edda6a884")) }
+    runBlocking { println(endpoints.getToken("0x683b383e9d6cc523f4c9764dacebb5752892fc53")) }
   }
 }

@@ -4,15 +4,19 @@ import com.squareup.moshi.Json
 import java.util.*
 
 data class PancakeswapTokenResponse(
-    @Json(name = "data") override val token: PancakeswapToken,
-    @Json(name = "updated_at") val updatedAtMillis: Long
+    @field:Json(name = "data") override val token: PancakeswapToken,
+    @field:Json(name = "updated_at") val updatedAtMillis: Long
 ) : ITokenValue, ITokenWithValue {
+  var tokenAddress: String? = null
   override val address: String
-    get() = token.symbol
+    get() = requireNotNull(tokenAddress) { "Token address is not set." }
+
   override val usd: Double
-    get() = token.priceInUsd
+    get() = token.priceInUsd.toDouble()
+
   override val updatedAt: Date
     get() = Date(updatedAtMillis)
+
   override val value: ITokenValue
     get() = this
 }

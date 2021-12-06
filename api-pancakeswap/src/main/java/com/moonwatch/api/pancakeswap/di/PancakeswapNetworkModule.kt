@@ -1,7 +1,6 @@
 package com.moonwatch.api.pancakeswap.di
 
 import com.moonwatch.api.pancakeswap.PancakeswapEndpoints
-import com.squareup.moshi.Moshi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,8 +15,7 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 object PancakeswapNetworkModule {
   @Provides
   @Singleton
-  fun moshiConverterFactory(): MoshiConverterFactory =
-      MoshiConverterFactory.create(Moshi.Builder().build())
+  fun moshiConverterFactory(): MoshiConverterFactory = MoshiConverterFactory.create()
 
   @Provides
   @Singleton

@@ -5,9 +5,9 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.moonwatch.api.pancakeswap.PancakeswapEndpoints
+import com.moonwatch.core.model.Chain
 import com.moonwatch.db.dao.AlertDao
 import com.moonwatch.db.dao.TokenDao
-import com.moonwatch.core.model.Chain
 import com.moonwatch.db.entity.TokenAlertEntity
 import com.moonwatch.db.entity.TokenValueEntity
 import dagger.assisted.Assisted
@@ -37,8 +37,8 @@ constructor(
         updatedValues[token.address] =
             TokenValueEntity(
                 address = token.address,
-                usd = tokenData.priceInUsd,
-                bnb = tokenData.priceInBnb,
+                usd = tokenData.priceInUsd.toDouble(),
+                bnb = tokenData.priceInBnb.toDouble(),
                 updatedAt = Date(updatedAtMillis),
             )
         delay(500L)
