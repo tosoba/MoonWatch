@@ -30,6 +30,7 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.moonwatch.core.android.model.*
+import com.moonwatch.core.model.ITokenWithValue
 import com.moonwatch.ui.theme.MoonWatchTheme
 import com.moonwatch.ui.theme.Purple700
 import com.moonwatch.ui.theme.Typography
@@ -174,7 +175,7 @@ private fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
     ) {
       HorizontalPager(state = pageState, count = items.size) { page ->
         when (items[page]) {
-          MainBottomNavigationItem.TOKENS -> TokensList()
+          MainBottomNavigationItem.TOKENS -> TokensWithValueList()
           MainBottomNavigationItem.ALERTS -> AlertsList()
         }
       }
@@ -205,7 +206,7 @@ private fun AlertsList(viewModel: MainViewModel = hiltViewModel()) {
 @ExperimentalPagerApi
 @FlowPreview
 @Composable
-private fun TokensList(viewModel: MainViewModel = hiltViewModel()) {
+private fun TokensWithValueList(viewModel: MainViewModel = hiltViewModel()) {
   val tokens = viewModel.getTokensFlow().collectAsState(initial = emptyList())
   if (tokens.value.isEmpty()) {
     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
@@ -213,29 +214,33 @@ private fun TokensList(viewModel: MainViewModel = hiltViewModel()) {
     }
   } else {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-      items(tokens.value) {
-        ListItem(
-            icon = {
-              Box(
-                  contentAlignment = Alignment.Center,
-                  modifier = Modifier.size(40.dp).clip(CircleShape).background(Purple700),
-              ) {
-                Text(
-                    text = it.token.name.substring(0, 1),
-                    style = Typography.h6.copy(fontWeight = FontWeight.Bold),
-                    color = Color.White,
-                )
-              }
-            },
-            secondaryText = { Text(text = "${it.value.usd}$", style = Typography.subtitle2) },
+      items(tokens.value) { TokenWithValueListItem(it) }
+    }
+  }
+}
+
+@ExperimentalMaterialApi
+@Composable
+private fun TokenWithValueListItem(tokenWithValue: ITokenWithValue) {
+  ListItem(
+      icon = {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.size(40.dp).clip(CircleShape).background(Purple700),
         ) {
           Text(
-              text = it.token.name,
-              style = Typography.subtitle1.copy(fontWeight = FontWeight.Bold),
+              text = tokenWithValue.token.name.substring(0, 1),
+              style = Typography.h6.copy(fontWeight = FontWeight.Bold),
+              color = Color.White,
           )
         }
-      }
-    }
+      },
+      secondaryText = { Text(text = "${tokenWithValue.value.usd}$", style = Typography.subtitle2) },
+  ) {
+    Text(
+        text = tokenWithValue.token.name,
+        style = Typography.subtitle1.copy(fontWeight = FontWeight.Bold),
+    )
   }
 }
 
