@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -304,6 +305,14 @@ private fun TokenWithValueListItem(tokenWithValue: ITokenWithValue) {
   ListItem(
       icon = { TokenIcon(tokenWithValue.token) },
       secondaryText = { Text(text = "${tokenWithValue.value.usd}$", style = Typography.subtitle2) },
+      trailing = {
+        IconButton(
+            onClick = {
+              // TODO: show bottom sheet with a delete prompt - then confirm dialog with cancel
+              // snackbar (5s time limit)
+            },
+        ) { Icon(Icons.Outlined.Delete, "") }
+      },
   ) {
     Text(
         text = tokenWithValue.token.name,
