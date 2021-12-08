@@ -185,12 +185,14 @@ private fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
 @Composable
 private fun AlertsList(viewModel: MainViewModel = hiltViewModel()) {
   val alerts = viewModel.getAlertsFlow().collectAsState(initial = emptyList())
-  if (alerts !is Ready<*> || alerts.value.isEmpty()) {
+  if (alerts.value.isEmpty()) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
       Text(text = "No saved alerts.", textAlign = TextAlign.Center)
     }
   } else {
-    LazyColumn { items(alerts.value) { ListItem { it.alert.address } } }
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
+      items(alerts.value) { ListItem { Text(text = it.alert.address) } }
+    }
   }
 }
 
@@ -201,12 +203,14 @@ private fun AlertsList(viewModel: MainViewModel = hiltViewModel()) {
 @Composable
 private fun TokensList(viewModel: MainViewModel = hiltViewModel()) {
   val tokens = viewModel.getTokensFlow().collectAsState(initial = emptyList())
-  if (tokens !is Ready<*> || tokens.value.isEmpty()) {
+  if (tokens.value.isEmpty()) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
       Text(text = "No saved tokens.", textAlign = TextAlign.Center)
     }
   } else {
-    LazyColumn { items(tokens.value) { ListItem { it.token.address } } }
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
+      items(tokens.value) { ListItem { Text(text = it.token.address) } }
+    }
   }
 }
 
