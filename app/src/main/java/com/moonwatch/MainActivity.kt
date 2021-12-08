@@ -1,6 +1,7 @@
 package com.moonwatch
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
@@ -20,11 +21,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.annotation.ExperimentalCoilApi
@@ -40,17 +41,17 @@ import com.moonwatch.ui.theme.MoonWatchTheme
 import com.moonwatch.ui.theme.Purple700
 import com.moonwatch.ui.theme.Typography
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.IOException
 import java.util.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import retrofit2.HttpException
 
+@AndroidEntryPoint
 @ExperimentalCoilApi
 @ExperimentalCoroutinesApi
 @ExperimentalMaterialApi
 @ExperimentalPagerApi
 @FlowPreview
-@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -60,13 +61,13 @@ class MainActivity : ComponentActivity() {
   }
 }
 
+@Composable
 @ExperimentalCoilApi
 @ExperimentalCoroutinesApi
 @ExperimentalMaterialApi
 @ExperimentalPagerApi
 @FlowPreview
-@Composable
-private fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
+private fun MainScaffold() {
   val scope = rememberCoroutineScope()
   val pageState = rememberPagerState()
   val scaffoldState = rememberScaffoldState()
@@ -78,67 +79,15 @@ private fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
   }
   ModalBottomSheetLayout(
       sheetContent = {
-        Column(modifier = Modifier.padding(15.dp)) {
-          Text(
-              text = "Add a new token",
-              style =
-                  Typography.h6.copy(
-                      color = MaterialTheme.colors.primary, fontWeight = FontWeight.Bold),
-              modifier = Modifier.padding(horizontal = 5.dp),
-          )
-          val tokenAddress = viewModel.tokenAddress.collectAsState(initial = "")
-          OutlinedTextField(
-              value = tokenAddress.value,
-              onValueChange = viewModel::setTokenAddress,
-              label = { Text("Address") },
-              singleLine = true,
-              isError = viewModel.tokenWithValue.value is Failed,
-              modifier = Modifier.fillMaxWidth(),
-          )
-          when (val tokenWithValue = viewModel.tokenWithValue.value) {
-            is Failed -> {
-              if (tokenWithValue.error !is InvalidAddressException) {
-                OutlinedButton(
-                    onClick = { scope.launch { viewModel.retryLoadingToken() } },
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text(text = "Retry") }
-              }
-            }
-            is Ready -> {
-              OutlinedTextField(
-                  value = tokenWithValue.value.token.name,
-                  onValueChange = {},
-                  label = { Text("Name") },
-                  singleLine = true,
-                  readOnly = true,
-                  modifier = Modifier.fillMaxWidth(),
-              )
-              OutlinedTextField(
-                  value = tokenWithValue.value.value.usd.toString(),
-                  onValueChange = {},
-                  label = { Text("Value in USD") },
-                  singleLine = true,
-                  readOnly = true,
-                  modifier = Modifier.fillMaxWidth(),
-              )
-              OutlinedButton(
-                  onClick = {
-                    scope.launch {
-                      viewModel.saveCurrentToken()
-                      modalBottomSheetState.hide()
-                    }
-                  },
-                  modifier = Modifier.fillMaxWidth(),
-              ) { Text(text = "Save") }
-            }
-            is LoadingInProgress -> {
-              Box(
-                  contentAlignment = Alignment.Center,
-                  modifier = Modifier.fillMaxWidth().padding(10.dp),
-              ) { CircularProgressIndicator() }
-            }
-            else -> return@Column
+        when (pageState.currentPage) {
+          MainBottomNavigationItem.TOKENS.ordinal -> {
+            AddTokenBottomSheetContent(modalBottomSheetState)
           }
+          MainBottomNavigationItem.ALERTS.ordinal -> {
+            // TODO: show add alert dialog with either a saved token or an address field
+            Box(Modifier.size(20.dp))
+          }
+          else -> throw IllegalArgumentException()
         }
       },
       sheetState = modalBottomSheetState,
@@ -189,11 +138,133 @@ private fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
   }
 }
 
+@Composable
+@ExperimentalCoroutinesApi
+@ExperimentalMaterialApi
+@FlowPreview
+private fun AddTokenBottomSheetContent(
+    modalBottomSheetState: ModalBottomSheetState,
+    viewModel: MainViewModel = hiltViewModel()
+) {
+  val scope = rememberCoroutineScope()
+  Column(modifier = Modifier.padding(15.dp)) {
+    Text(
+        text = "Add a new token",
+        style =
+            Typography.h6.copy(
+                color = MaterialTheme.colors.primary,
+                fontWeight = FontWeight.Bold,
+            ),
+        modifier = Modifier.padding(horizontal = 5.dp),
+    )
+    val tokenAddress = viewModel.tokenAddress.collectAsState(initial = "")
+    OutlinedTextField(
+        value = tokenAddress.value,
+        onValueChange = viewModel::setTokenAddress,
+        label = { Text("Address") },
+        singleLine = true,
+        isError = viewModel.tokenWithValue.value is Failed,
+        modifier = Modifier.fillMaxWidth(),
+    )
+    when (val tokenWithValue = viewModel.tokenWithValue.value) {
+      is Failed -> {
+        when (val error = tokenWithValue.error) {
+          is HttpException -> {
+            if (error.code() == 404) {
+              Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth()) {
+                Text(text = "Token not found.", textAlign = TextAlign.Center)
+              }
+            } else {
+              Toast.makeText(
+                      LocalContext.current,
+                      "Unknown network error.",
+                      Toast.LENGTH_SHORT,
+                  )
+                  .show()
+              RetryLoadingTokenButton(scope)
+            }
+          }
+          is TimeoutCancellationException -> {
+            Toast.makeText(LocalContext.current, "Request has timed out.", Toast.LENGTH_SHORT)
+                .show()
+            RetryLoadingTokenButton(scope)
+          }
+          is IOException -> {
+            Toast.makeText(
+                    LocalContext.current,
+                    "No internet connection.",
+                    Toast.LENGTH_SHORT,
+                )
+                .show()
+            RetryLoadingTokenButton(scope)
+          }
+          is InvalidAddressException -> {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth()) {
+              Text(text = "Invalid token address.", textAlign = TextAlign.Center)
+            }
+          }
+          else -> {
+            Toast.makeText(LocalContext.current, "Unknown error.", Toast.LENGTH_SHORT).show()
+            RetryLoadingTokenButton(scope)
+          }
+        }
+      }
+      is Ready -> {
+        OutlinedTextField(
+            value = tokenWithValue.value.token.name,
+            onValueChange = {},
+            label = { Text("Name") },
+            singleLine = true,
+            readOnly = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = tokenWithValue.value.value.usd.toString(),
+            onValueChange = {},
+            label = { Text("Value in USD") },
+            singleLine = true,
+            readOnly = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedButton(
+            onClick = {
+              scope.launch {
+                viewModel.saveCurrentToken()
+                modalBottomSheetState.hide()
+              }
+            },
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text(text = "Save") }
+      }
+      is LoadingInProgress -> {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxWidth().padding(10.dp),
+        ) { CircularProgressIndicator() }
+      }
+      else -> return@Column
+    }
+  }
+}
+
+@Composable
+@ExperimentalCoroutinesApi
+@FlowPreview
+private fun RetryLoadingTokenButton(
+    scope: CoroutineScope,
+    viewModel: MainViewModel = hiltViewModel()
+) {
+  OutlinedButton(
+      onClick = { scope.launch { viewModel.retryLoadingToken() } },
+      modifier = Modifier.fillMaxWidth(),
+  ) { Text(text = "Retry") }
+}
+
+@Composable
 @ExperimentalCoroutinesApi
 @ExperimentalMaterialApi
 @ExperimentalPagerApi
 @FlowPreview
-@Composable
 private fun AlertsList(viewModel: MainViewModel = hiltViewModel()) {
   val alerts = viewModel.getAlertsFlow().collectAsState(initial = emptyList())
   if (alerts.value.isEmpty()) {
@@ -207,12 +278,12 @@ private fun AlertsList(viewModel: MainViewModel = hiltViewModel()) {
   }
 }
 
+@Composable
 @ExperimentalCoilApi
 @ExperimentalCoroutinesApi
 @ExperimentalMaterialApi
 @ExperimentalPagerApi
 @FlowPreview
-@Composable
 private fun TokensWithValueList(viewModel: MainViewModel = hiltViewModel()) {
   val tokens = viewModel.getTokensFlow().collectAsState(initial = emptyList())
   if (tokens.value.isEmpty()) {
@@ -226,9 +297,9 @@ private fun TokensWithValueList(viewModel: MainViewModel = hiltViewModel()) {
   }
 }
 
+@Composable
 @ExperimentalCoilApi
 @ExperimentalMaterialApi
-@Composable
 private fun TokenWithValueListItem(tokenWithValue: ITokenWithValue) {
   ListItem(
       icon = { TokenIcon(tokenWithValue.token) },
@@ -241,8 +312,8 @@ private fun TokenWithValueListItem(tokenWithValue: ITokenWithValue) {
   }
 }
 
-@ExperimentalCoilApi
 @Composable
+@ExperimentalCoilApi
 private fun TokenIcon(token: IToken) {
   // TODO: fix coil
   val painter =
@@ -296,10 +367,4 @@ private enum class MainBottomNavigationItem(@DrawableRes val drawableResource: I
         name.lowercase(Locale.getDefault()).replaceFirstChar {
           if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
         }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-  MoonWatchTheme {}
 }

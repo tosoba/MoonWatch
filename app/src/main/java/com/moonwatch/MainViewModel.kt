@@ -16,6 +16,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.withTimeout
 
 @ExperimentalCoroutinesApi
 @FlowPreview
@@ -58,7 +59,8 @@ constructor(
 
           emit(LoadingFirst)
           try {
-            emit(Ready(getTokenWithValue(address)))
+            val tokenWithValue = withTimeout(10_000L) { getTokenWithValue(address) }
+            emit(Ready(tokenWithValue))
           } catch (ex: Exception) {
             emit(FailedFirst(ex))
           }
