@@ -6,15 +6,18 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
@@ -28,6 +31,7 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.moonwatch.core.android.model.*
 import com.moonwatch.ui.theme.MoonWatchTheme
+import com.moonwatch.ui.theme.Purple700
 import com.moonwatch.ui.theme.Typography
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
@@ -186,7 +190,7 @@ private fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
 private fun AlertsList(viewModel: MainViewModel = hiltViewModel()) {
   val alerts = viewModel.getAlertsFlow().collectAsState(initial = emptyList())
   if (alerts.value.isEmpty()) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
       Text(text = "No saved alerts.", textAlign = TextAlign.Center)
     }
   } else {
@@ -204,12 +208,33 @@ private fun AlertsList(viewModel: MainViewModel = hiltViewModel()) {
 private fun TokensList(viewModel: MainViewModel = hiltViewModel()) {
   val tokens = viewModel.getTokensFlow().collectAsState(initial = emptyList())
   if (tokens.value.isEmpty()) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
       Text(text = "No saved tokens.", textAlign = TextAlign.Center)
     }
   } else {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-      items(tokens.value) { ListItem { Text(text = it.token.address) } }
+      items(tokens.value) {
+        ListItem(
+            icon = {
+              Box(
+                  contentAlignment = Alignment.Center,
+                  modifier = Modifier.size(40.dp).clip(CircleShape).background(Purple700),
+              ) {
+                Text(
+                    text = it.token.name.substring(0, 1),
+                    style = Typography.h6.copy(fontWeight = FontWeight.Bold),
+                    color = Color.White,
+                )
+              }
+            },
+            secondaryText = { Text(text = "${it.value.usd}$", style = Typography.subtitle2) },
+        ) {
+          Text(
+              text = it.token.name,
+              style = Typography.subtitle1.copy(fontWeight = FontWeight.Bold),
+          )
+        }
+      }
     }
   }
 }
