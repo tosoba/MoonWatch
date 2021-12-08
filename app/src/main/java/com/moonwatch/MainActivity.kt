@@ -6,6 +6,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,10 +27,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.ImagePainter
+import coil.compose.rememberImagePainter
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.moonwatch.core.android.model.*
+import com.moonwatch.core.model.IToken
 import com.moonwatch.core.model.ITokenWithValue
 import com.moonwatch.ui.theme.MoonWatchTheme
 import com.moonwatch.ui.theme.Purple700
@@ -40,6 +45,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.launch
 
+@ExperimentalCoilApi
 @ExperimentalCoroutinesApi
 @ExperimentalMaterialApi
 @ExperimentalPagerApi
@@ -54,6 +60,7 @@ class MainActivity : ComponentActivity() {
   }
 }
 
+@ExperimentalCoilApi
 @ExperimentalCoroutinesApi
 @ExperimentalMaterialApi
 @ExperimentalPagerApi
@@ -90,10 +97,12 @@ private fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
           )
           when (val tokenWithValue = viewModel.tokenWithValue.value) {
             is Failed -> {
-              OutlinedButton(
-                  onClick = { scope.launch { viewModel.retryLoadingToken() } },
-                  modifier = Modifier.fillMaxWidth(),
-              ) { Text(text = "Retry") }
+              if (tokenWithValue.error !is InvalidAddressException) {
+                OutlinedButton(
+                    onClick = { scope.launch { viewModel.retryLoadingToken() } },
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text(text = "Retry") }
+              }
             }
             is Ready -> {
               OutlinedTextField(
@@ -146,26 +155,23 @@ private fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
           }
         },
         bottomBar = {
-          BottomAppBar(
-              backgroundColor = MaterialTheme.colors.primary,
-              content = {
-                items.forEachIndexed { index, item ->
-                  BottomNavigationItem(
-                      icon = {
-                        Icon(
-                            painter = painterResource(id = item.drawableResource),
-                            contentDescription = item.title,
-                        )
-                      },
-                      selected = index == pageState.currentPage,
-                      onClick = { scope.launch { pageState.animateScrollToPage(index) } },
-                      selectedContentColor = Color.Magenta,
-                      unselectedContentColor = Color.LightGray,
-                      label = { Text(text = item.title) },
-                  )
-                }
-              },
-          )
+          BottomAppBar {
+            items.forEachIndexed { index, item ->
+              BottomNavigationItem(
+                  icon = {
+                    Icon(
+                        painter = painterResource(id = item.drawableResource),
+                        contentDescription = item.title,
+                    )
+                  },
+                  selected = index == pageState.currentPage,
+                  onClick = { scope.launch { pageState.animateScrollToPage(index) } },
+                  selectedContentColor = Color.Magenta,
+                  unselectedContentColor = Color.LightGray,
+                  label = { Text(text = item.title) },
+              )
+            }
+          }
         },
         floatingActionButton = {
           FloatingActionButton(onClick = { scope.launch { modalBottomSheetState.show() } }) {
@@ -201,6 +207,7 @@ private fun AlertsList(viewModel: MainViewModel = hiltViewModel()) {
   }
 }
 
+@ExperimentalCoilApi
 @ExperimentalCoroutinesApi
 @ExperimentalMaterialApi
 @ExperimentalPagerApi
@@ -219,28 +226,41 @@ private fun TokensWithValueList(viewModel: MainViewModel = hiltViewModel()) {
   }
 }
 
+@ExperimentalCoilApi
 @ExperimentalMaterialApi
 @Composable
 private fun TokenWithValueListItem(tokenWithValue: ITokenWithValue) {
   ListItem(
-      icon = {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.size(40.dp).clip(CircleShape).background(Purple700),
-        ) {
-          Text(
-              text = tokenWithValue.token.name.substring(0, 1),
-              style = Typography.h6.copy(fontWeight = FontWeight.Bold),
-              color = Color.White,
-          )
-        }
-      },
+      icon = { TokenIcon(tokenWithValue.token) },
       secondaryText = { Text(text = "${tokenWithValue.value.usd}$", style = Typography.subtitle2) },
   ) {
     Text(
         text = tokenWithValue.token.name,
         style = Typography.subtitle1.copy(fontWeight = FontWeight.Bold),
     )
+  }
+}
+
+@ExperimentalCoilApi
+@Composable
+private fun TokenIcon(token: IToken) {
+  // TODO: fix coil
+  val painter =
+      rememberImagePainter("https://r.poocoin.app/smartchain/assets/${token.address}/logo.png")
+  val state = painter.state
+  if (state is ImagePainter.State.Success) {
+    Image(painter = painter, contentDescription = token.name, modifier = Modifier.size(40.dp))
+  } else {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.size(40.dp).clip(CircleShape).background(Purple700),
+    ) {
+      Text(
+          text = token.name.substring(0, 1),
+          style = Typography.h6.copy(fontWeight = FontWeight.Bold),
+          color = Color.White,
+      )
+    }
   }
 }
 
