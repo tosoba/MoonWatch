@@ -40,7 +40,7 @@ constructor(
 
   init {
     merge(
-            tokenAddress.drop(1).debounce(timeoutMillis = 500L).distinctUntilChanged(),
+            tokenAddress.drop(1).debounce(500L).distinctUntilChanged(),
             _toggleRetryLoadingToken.debounce(500L).withLatestFrom(tokenAddress) { _, address ->
               address
             },
@@ -84,8 +84,7 @@ constructor(
     )
   }
 
-  // TODO: regex
-  private fun isBscAddressValid(address: String) = address.length == 42 && address.startsWith("0x")
+  private fun isBscAddressValid(address: String) = address.matches(Regex("^0x\\S{40}\$"))
 }
 
 object InvalidAddressException : IllegalArgumentException()
