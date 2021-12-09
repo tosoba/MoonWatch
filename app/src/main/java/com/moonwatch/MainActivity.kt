@@ -1,5 +1,7 @@
 package com.moonwatch
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -29,6 +31,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.ImagePainter
@@ -162,37 +165,69 @@ private fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
 }
 
 @Composable
+private fun CopyIconButton(label: String, text: String, toastText: String) {
+  Box(contentAlignment = Alignment.Center) {
+    val context = LocalContext.current
+    IconButton(
+        onClick = {
+          val clip = ClipData.newPlainText(label, text)
+          getSystemService(context, ClipboardManager::class.java)?.let { manager ->
+            manager.setPrimaryClip(clip)
+            Toast.makeText(context, toastText, Toast.LENGTH_SHORT).show()
+          }
+        },
+    ) { Icon(painterResource(R.drawable.ic_baseline_content_copy_24), "") }
+  }
+}
+
+@Composable
 @ExperimentalCoroutinesApi
 @ExperimentalMaterialApi
 @FlowPreview
 private fun ViewTokenBottomSheetContent(viewModel: MainViewModel = hiltViewModel()) {
   val tokenWithValue: ITokenWithValue =
       viewModel.tokenWithValueBeingViewed.value ?: throw IllegalArgumentException()
-  Column(modifier = Modifier.padding(15.dp)) {
-    OutlinedTextField(
-        value = tokenWithValue.token.address,
-        onValueChange = {},
-        readOnly = true,
-        label = { Text("Address") },
-        singleLine = true,
+  Column(modifier = Modifier.padding(vertical = 15.dp, horizontal = 10.dp)) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+      OutlinedTextField(
+          value = tokenWithValue.token.address,
+          onValueChange = {},
+          readOnly = true,
+          label = { Text("Address") },
+          singleLine = true,
+          modifier = Modifier.weight(1f),
+      )
+      CopyIconButton("token_address", tokenWithValue.token.address, "Copied token address")
+    }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+      OutlinedTextField(
+          value = tokenWithValue.token.name,
+          onValueChange = {},
+          label = { Text("Name") },
+          singleLine = true,
+          readOnly = true,
+          modifier = Modifier.weight(1f),
+      )
+      CopyIconButton("token_name", tokenWithValue.token.name, "Copied token name")
+    }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+      OutlinedTextField(
+          value = tokenWithValue.value.usd.toString(),
+          onValueChange = {},
+          label = { Text("Value in USD") },
+          singleLine = true,
+          readOnly = true,
+          modifier = Modifier.weight(1f),
+      )
+      CopyIconButton("token_value", tokenWithValue.value.usd.toString(), "Copied token value")
+    }
+    OutlinedButton(
+        onClick = {
+          // TODO: switch to alerts tab with bottom sheet shown with 2 inputs for sell/buy target
+          // (use a single alert bottom sheet content)
+        },
         modifier = Modifier.fillMaxWidth(),
-    )
-    OutlinedTextField(
-        value = tokenWithValue.token.name,
-        onValueChange = {},
-        label = { Text("Name") },
-        singleLine = true,
-        readOnly = true,
-        modifier = Modifier.fillMaxWidth(),
-    )
-    OutlinedTextField(
-        value = tokenWithValue.value.usd.toString(),
-        onValueChange = {},
-        label = { Text("Value in USD") },
-        singleLine = true,
-        readOnly = true,
-        modifier = Modifier.fillMaxWidth(),
-    )
+    ) { Text(text = "Add alert") }
   }
 }
 
@@ -205,7 +240,7 @@ private fun AddTokenBottomSheetContent(
     viewModel: MainViewModel = hiltViewModel()
 ) {
   val scope = rememberCoroutineScope()
-  Column(modifier = Modifier.padding(15.dp)) {
+  Column(modifier = Modifier.padding(vertical = 15.dp, horizontal = 10.dp)) {
     Text(
         text = "Add a new token",
         style =
