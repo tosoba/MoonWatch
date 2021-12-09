@@ -91,6 +91,11 @@ constructor(
         token = currentTokenWithValue.value.token,
         value = currentTokenWithValue.value.value,
     )
+    _tokenWithValueBeingAdded.value = Empty
+  }
+
+  fun cancelAddingToken() {
+    _tokenAddress.value = ""
   }
 
   fun deleteToken(address: String) {

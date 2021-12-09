@@ -284,15 +284,27 @@ private fun AddTokenBottomSheetContent(
             readOnly = true,
             modifier = Modifier.fillMaxWidth(),
         )
-        OutlinedButton(
-            onClick = {
-              scope.launch {
-                viewModel.saveCurrentToken()
-                modalBottomSheetState.hide()
-              }
-            },
-            modifier = Modifier.fillMaxWidth(),
-        ) { Text(text = "Save") }
+        Row(horizontalArrangement = Arrangement.SpaceAround) {
+          OutlinedButton(
+              onClick = {
+                scope.launch {
+                  viewModel.cancelAddingToken()
+                  modalBottomSheetState.hide()
+                }
+              },
+              modifier = Modifier.weight(1f),
+          ) { Text(text = "Cancel") }
+          Box(modifier = Modifier.size(5.dp))
+          OutlinedButton(
+              onClick = {
+                scope.launch {
+                  viewModel.saveCurrentToken()
+                  modalBottomSheetState.hide()
+                }
+              },
+              modifier = Modifier.weight(1f),
+          ) { Text(text = "Save") }
+        }
       }
       is LoadingInProgress -> {
         Box(
