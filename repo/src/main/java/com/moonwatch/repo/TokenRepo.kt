@@ -28,4 +28,8 @@ constructor(
   override suspend fun saveTokenWithValue(token: IToken, value: ITokenValue) {
     dao.insertTokenWithValue(TokenEntity(token), TokenValueEntity(value))
   }
+
+  override suspend fun deleteTokenByAddress(address: String) {
+    dao.deleteTokenByAddress(address)
+  }
 }

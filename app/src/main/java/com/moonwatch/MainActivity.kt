@@ -263,6 +263,44 @@ private fun RetryLoadingTokenButton(
 
 @Composable
 @ExperimentalCoroutinesApi
+@FlowPreview
+private fun DeleteTokenDialog(
+    token: IToken,
+    dismiss: () -> Unit,
+    viewModel: MainViewModel = hiltViewModel(),
+) {
+  AlertDialog(
+      onDismissRequest = dismiss,
+      title = { Text(text = "Delete token") },
+      text = {
+        Text(text = "Do you really want to delete ${token.name} with all associated alerts?")
+      },
+      buttons = {
+        val context = LocalContext.current
+        Row(
+            modifier = Modifier.padding(all = 8.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+        ) {
+          OutlinedButton(
+              modifier = Modifier.weight(1f),
+              onClick = {
+                viewModel.deleteToken(token.address)
+                dismiss()
+                Toast.makeText(context, "${token.name} was deleted.", Toast.LENGTH_SHORT).show()
+              },
+          ) { Text("Confirm") }
+          Box(Modifier.size(5.dp))
+          OutlinedButton(
+              modifier = Modifier.weight(1f),
+              onClick = dismiss,
+          ) { Text("Cancel") }
+        }
+      },
+  )
+}
+
+@Composable
+@ExperimentalCoroutinesApi
 @ExperimentalMaterialApi
 @ExperimentalPagerApi
 @FlowPreview
@@ -286,6 +324,9 @@ private fun AlertsList(viewModel: MainViewModel = hiltViewModel()) {
 @ExperimentalPagerApi
 @FlowPreview
 private fun TokensWithValueList(viewModel: MainViewModel = hiltViewModel()) {
+  var tokenBeingDeleted by remember { mutableStateOf<IToken?>(null) }
+  tokenBeingDeleted?.let { DeleteTokenDialog(token = it, dismiss = { tokenBeingDeleted = null }) }
+
   val tokens = viewModel.getTokensFlow().collectAsState(initial = emptyList())
   if (tokens.value.isEmpty()) {
     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
@@ -293,25 +334,32 @@ private fun TokensWithValueList(viewModel: MainViewModel = hiltViewModel()) {
     }
   } else {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-      items(tokens.value) { TokenWithValueListItem(it) }
+      items(tokens.value) { tokenWithValue ->
+        TokenWithValueListItem(
+            tokenWithValue = tokenWithValue,
+            onDeleteClick = { tokenBeingDeleted = it },
+        )
+      }
     }
   }
 }
 
 @Composable
 @ExperimentalCoilApi
+@ExperimentalCoroutinesApi
 @ExperimentalMaterialApi
-private fun TokenWithValueListItem(tokenWithValue: ITokenWithValue) {
+@FlowPreview
+private fun TokenWithValueListItem(
+    tokenWithValue: ITokenWithValue,
+    onDeleteClick: (IToken) -> Unit
+) {
   ListItem(
       icon = { TokenIcon(tokenWithValue.token) },
       secondaryText = { Text(text = "${tokenWithValue.value.usd}$", style = Typography.subtitle2) },
       trailing = {
-        IconButton(
-            onClick = {
-              // TODO: show bottom sheet with a delete prompt - then confirm dialog with cancel
-              // snackbar (5s time limit)
-            },
-        ) { Icon(Icons.Outlined.Delete, "") }
+        IconButton(onClick = { onDeleteClick(tokenWithValue.token) }) {
+          Icon(Icons.Outlined.Delete, "")
+        }
       },
   ) {
     Text(

@@ -9,4 +9,5 @@ interface ITokenRepo {
   fun getTokensWithValue(): Flow<List<ITokenWithValue>>
   suspend fun getTokenWithValueByAddress(address: String): ITokenWithValue
   suspend fun saveTokenWithValue(token: IToken, value: ITokenValue)
+  suspend fun deleteTokenByAddress(address: String)
 }

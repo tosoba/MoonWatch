@@ -38,4 +38,7 @@ interface TokenDao {
     WHERE v.updated_at = (SELECT MAX(updated_at) FROM token_value WHERE address = t.address) 
     ORDER BY v.usd DESC""")
   fun selectTokensWithLatestValueOrderedByUsdDesc(): Flow<List<TokenWithLatestValue>>
+
+  @Query("DELETE FROM token WHERE address = :address")
+  suspend fun deleteTokenByAddress(address: String)
 }

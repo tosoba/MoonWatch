@@ -7,15 +7,13 @@ import androidx.lifecycle.viewModelScope
 import com.moonwatch.core.android.model.*
 import com.moonwatch.core.ext.withLatestFrom
 import com.moonwatch.core.model.ITokenWithValue
-import com.moonwatch.core.usecase.GetAlertsFlow
-import com.moonwatch.core.usecase.GetTokenWithValue
-import com.moonwatch.core.usecase.GetTokensFlow
-import com.moonwatch.core.usecase.SaveTokenWithValue
+import com.moonwatch.core.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 
 @ExperimentalCoroutinesApi
@@ -26,6 +24,7 @@ class MainViewModel
 constructor(
     private val getTokenWithValue: GetTokenWithValue,
     private val saveTokenWithValue: SaveTokenWithValue,
+    private val deleteToken: DeleteToken,
     val getAlertsFlow: GetAlertsFlow,
     val getTokensFlow: GetTokensFlow,
 ) : ViewModel() {
@@ -84,6 +83,10 @@ constructor(
         token = currentTokenWithValue.value.token,
         value = currentTokenWithValue.value.value,
     )
+  }
+
+  fun deleteToken(address: String) {
+    viewModelScope.launch { deleteToken.invoke(address) }
   }
 
   private fun isBscAddressValid(address: String) = address.matches(Regex("^0x\\S{40}\$"))
