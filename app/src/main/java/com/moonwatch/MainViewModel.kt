@@ -32,9 +32,13 @@ constructor(
   val tokenAddress: Flow<String>
     get() = _tokenAddress
 
-  private val _tokenWithValue = mutableStateOf<Loadable<ITokenWithValue>>(Empty)
-  val tokenWithValue: State<Loadable<ITokenWithValue>>
-    get() = _tokenWithValue
+  private val _tokenWithValueBeingAdded = mutableStateOf<Loadable<ITokenWithValue>>(Empty)
+  val tokenWithValueBeingAdded: State<Loadable<ITokenWithValue>>
+    get() = _tokenWithValueBeingAdded
+
+  private val _tokenWithValueBeingViewed = mutableStateOf<ITokenWithValue?>(null)
+  val tokenWithValueBeingViewed: State<ITokenWithValue?>
+    get() = _tokenWithValueBeingViewed
 
   private val _toggleRetryLoadingToken = MutableSharedFlow<Unit>()
 
@@ -64,7 +68,7 @@ constructor(
             emit(FailedFirst(ex))
           }
         }
-        .onEach(_tokenWithValue::value::set)
+        .onEach(_tokenWithValueBeingAdded::value::set)
         .launchIn(viewModelScope)
   }
 
@@ -72,12 +76,16 @@ constructor(
     _tokenAddress.value = address
   }
 
+  fun setTokenWithValueBeingViewed(tokenWithValue: ITokenWithValue) {
+    _tokenWithValueBeingViewed.value = tokenWithValue
+  }
+
   suspend fun retryLoadingToken() {
     _toggleRetryLoadingToken.emit(Unit)
   }
 
   suspend fun saveCurrentToken() {
-    val currentTokenWithValue = _tokenWithValue.value
+    val currentTokenWithValue = _tokenWithValueBeingAdded.value
     if (currentTokenWithValue !is Ready<ITokenWithValue>) throw IllegalStateException()
     saveTokenWithValue(
         token = currentTokenWithValue.value.token,

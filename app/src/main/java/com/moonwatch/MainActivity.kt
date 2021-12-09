@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -62,19 +63,26 @@ class MainActivity : ComponentActivity() {
   }
 }
 
+private enum class TokenBottomSheetDialogMode {
+  ADD,
+  VIEW
+}
+
 @Composable
 @ExperimentalCoilApi
 @ExperimentalCoroutinesApi
 @ExperimentalMaterialApi
 @ExperimentalPagerApi
 @FlowPreview
-private fun MainScaffold() {
+private fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
   val scope = rememberCoroutineScope()
   val pageState = rememberPagerState()
   val scaffoldState = rememberScaffoldState()
   val modalBottomSheetState =
       rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
   val items = MainBottomNavigationItem.values()
+  var tokenBottomSheetDialogMode by remember { mutableStateOf(TokenBottomSheetDialogMode.ADD) }
+
   BackHandler(enabled = modalBottomSheetState.isVisible) {
     scope.launch { modalBottomSheetState.hide() }
   }
@@ -82,7 +90,10 @@ private fun MainScaffold() {
       sheetContent = {
         when (pageState.currentPage) {
           MainBottomNavigationItem.TOKENS.ordinal -> {
-            AddTokenBottomSheetContent(modalBottomSheetState)
+            when (tokenBottomSheetDialogMode) {
+              TokenBottomSheetDialogMode.ADD -> AddTokenBottomSheetContent(modalBottomSheetState)
+              TokenBottomSheetDialogMode.VIEW -> ViewTokenBottomSheetContent()
+            }
           }
           MainBottomNavigationItem.ALERTS.ordinal -> {
             // TODO: show add alert dialog with either a saved token or an address field
@@ -124,18 +135,64 @@ private fun MainScaffold() {
           }
         },
         floatingActionButton = {
-          FloatingActionButton(onClick = { scope.launch { modalBottomSheetState.show() } }) {
-            Icon(Icons.Filled.Add, "")
-          }
+          FloatingActionButton(
+              onClick = {
+                tokenBottomSheetDialogMode = TokenBottomSheetDialogMode.ADD
+                scope.launch { modalBottomSheetState.show() }
+              },
+          ) { Icon(Icons.Filled.Add, "") }
         },
     ) {
       HorizontalPager(state = pageState, count = items.size) { page ->
         when (items[page]) {
-          MainBottomNavigationItem.TOKENS -> TokensWithValueList()
+          MainBottomNavigationItem.TOKENS -> {
+            TokensWithValueList(
+                onItemClick = {
+                  tokenBottomSheetDialogMode = TokenBottomSheetDialogMode.VIEW
+                  viewModel.setTokenWithValueBeingViewed(it)
+                  scope.launch { modalBottomSheetState.show() }
+                },
+            )
+          }
           MainBottomNavigationItem.ALERTS -> AlertsList()
         }
       }
     }
+  }
+}
+
+@Composable
+@ExperimentalCoroutinesApi
+@ExperimentalMaterialApi
+@FlowPreview
+private fun ViewTokenBottomSheetContent(viewModel: MainViewModel = hiltViewModel()) {
+  val tokenWithValue: ITokenWithValue =
+      viewModel.tokenWithValueBeingViewed.value ?: throw IllegalArgumentException()
+  Column(modifier = Modifier.padding(15.dp)) {
+    OutlinedTextField(
+        value = tokenWithValue.token.address,
+        onValueChange = {},
+        readOnly = true,
+        label = { Text("Address") },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+    )
+    OutlinedTextField(
+        value = tokenWithValue.token.name,
+        onValueChange = {},
+        label = { Text("Name") },
+        singleLine = true,
+        readOnly = true,
+        modifier = Modifier.fillMaxWidth(),
+    )
+    OutlinedTextField(
+        value = tokenWithValue.value.usd.toString(),
+        onValueChange = {},
+        label = { Text("Value in USD") },
+        singleLine = true,
+        readOnly = true,
+        modifier = Modifier.fillMaxWidth(),
+    )
   }
 }
 
@@ -164,10 +221,10 @@ private fun AddTokenBottomSheetContent(
         onValueChange = viewModel::setTokenAddress,
         label = { Text("Address") },
         singleLine = true,
-        isError = viewModel.tokenWithValue.value is Failed,
+        isError = viewModel.tokenWithValueBeingAdded.value is Failed,
         modifier = Modifier.fillMaxWidth(),
     )
-    when (val tokenWithValue = viewModel.tokenWithValue.value) {
+    when (val tokenWithValue = viewModel.tokenWithValueBeingAdded.value) {
       is Failed -> {
         when (val error = tokenWithValue.error) {
           is HttpException -> {
@@ -323,7 +380,10 @@ private fun AlertsList(viewModel: MainViewModel = hiltViewModel()) {
 @ExperimentalMaterialApi
 @ExperimentalPagerApi
 @FlowPreview
-private fun TokensWithValueList(viewModel: MainViewModel = hiltViewModel()) {
+private fun TokensWithValueList(
+    onItemClick: (ITokenWithValue) -> Unit,
+    viewModel: MainViewModel = hiltViewModel()
+) {
   var tokenBeingDeleted by remember { mutableStateOf<IToken?>(null) }
   tokenBeingDeleted?.let { DeleteTokenDialog(token = it, dismiss = { tokenBeingDeleted = null }) }
 
@@ -337,6 +397,7 @@ private fun TokensWithValueList(viewModel: MainViewModel = hiltViewModel()) {
       items(tokens.value) { tokenWithValue ->
         TokenWithValueListItem(
             tokenWithValue = tokenWithValue,
+            onItemClick = onItemClick,
             onDeleteClick = { tokenBeingDeleted = it },
         )
       }
@@ -351,6 +412,7 @@ private fun TokensWithValueList(viewModel: MainViewModel = hiltViewModel()) {
 @FlowPreview
 private fun TokenWithValueListItem(
     tokenWithValue: ITokenWithValue,
+    onItemClick: (ITokenWithValue) -> Unit,
     onDeleteClick: (IToken) -> Unit
 ) {
   ListItem(
@@ -361,6 +423,7 @@ private fun TokenWithValueListItem(
           Icon(Icons.Outlined.Delete, "")
         }
       },
+      modifier = Modifier.clickable { onItemClick(tokenWithValue) },
   ) {
     Text(
         text = tokenWithValue.token.name,
