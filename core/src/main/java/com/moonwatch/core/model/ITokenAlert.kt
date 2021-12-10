@@ -6,7 +6,7 @@ interface ITokenAlert {
   val address: String
   val active: Boolean
   val createdAt: Date
-  val lastFiredAt: Date
+  val lastFiredAt: Date?
   val sellPriceTargetUsd: Double?
   val buyPriceTargetUsd: Double?
 }

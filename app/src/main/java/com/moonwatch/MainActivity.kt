@@ -66,9 +66,11 @@ class MainActivity : ComponentActivity() {
   }
 }
 
-private enum class TokenBottomSheetDialogMode {
-  ADD,
-  VIEW
+private enum class BottomSheetDialogMode {
+  ADD_TOKEN,
+  VIEW_TOKEN,
+  ADD_ALERT,
+  EDIT_ALERT,
 }
 
 @Composable
@@ -84,25 +86,18 @@ private fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
   val modalBottomSheetState =
       rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
   val items = MainBottomNavigationItem.values()
-  var tokenBottomSheetDialogMode by remember { mutableStateOf(TokenBottomSheetDialogMode.ADD) }
+  var bottomSheetDialogMode by remember { mutableStateOf(BottomSheetDialogMode.ADD_TOKEN) }
 
   BackHandler(enabled = modalBottomSheetState.isVisible) {
     scope.launch { modalBottomSheetState.hide() }
   }
   ModalBottomSheetLayout(
       sheetContent = {
-        when (pageState.currentPage) {
-          MainBottomNavigationItem.TOKENS.ordinal -> {
-            when (tokenBottomSheetDialogMode) {
-              TokenBottomSheetDialogMode.ADD -> AddTokenBottomSheetContent(modalBottomSheetState)
-              TokenBottomSheetDialogMode.VIEW -> ViewTokenBottomSheetContent()
-            }
-          }
-          MainBottomNavigationItem.ALERTS.ordinal -> {
-            // TODO: show add alert dialog with either a saved token or an address field
-            Box(Modifier.size(20.dp))
-          }
-          else -> throw IllegalArgumentException()
+        when (bottomSheetDialogMode) {
+          BottomSheetDialogMode.ADD_TOKEN -> AddTokenBottomSheetContent(modalBottomSheetState)
+          BottomSheetDialogMode.VIEW_TOKEN -> ViewTokenBottomSheetContent()
+          BottomSheetDialogMode.ADD_ALERT -> {}
+          BottomSheetDialogMode.EDIT_ALERT -> {}
         }
       },
       sheetState = modalBottomSheetState,
@@ -140,7 +135,7 @@ private fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
         floatingActionButton = {
           FloatingActionButton(
               onClick = {
-                tokenBottomSheetDialogMode = TokenBottomSheetDialogMode.ADD
+                bottomSheetDialogMode = BottomSheetDialogMode.ADD_TOKEN
                 scope.launch { modalBottomSheetState.show() }
               },
           ) { Icon(Icons.Filled.Add, "") }
@@ -151,7 +146,7 @@ private fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
           MainBottomNavigationItem.TOKENS -> {
             TokensWithValueList(
                 onItemClick = {
-                  tokenBottomSheetDialogMode = TokenBottomSheetDialogMode.VIEW
+                  bottomSheetDialogMode = BottomSheetDialogMode.VIEW_TOKEN
                   viewModel.setTokenWithValueBeingViewed(it)
                   scope.launch { modalBottomSheetState.show() }
                 },
@@ -165,12 +160,12 @@ private fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
 }
 
 @Composable
-private fun CopyIconButton(label: String, text: String, toastText: String) {
+private fun CopyIconButton(text: String, toastText: String) {
   Box(contentAlignment = Alignment.Center) {
     val context = LocalContext.current
     IconButton(
         onClick = {
-          val clip = ClipData.newPlainText(label, text)
+          val clip = ClipData.newPlainText("view_token_copied_value", text)
           getSystemService(context, ClipboardManager::class.java)?.let { manager ->
             manager.setPrimaryClip(clip)
             Toast.makeText(context, toastText, Toast.LENGTH_SHORT).show()
@@ -188,39 +183,21 @@ private fun ViewTokenBottomSheetContent(viewModel: MainViewModel = hiltViewModel
   val tokenWithValue: ITokenWithValue =
       viewModel.tokenWithValueBeingViewed.value ?: throw IllegalArgumentException()
   Column(modifier = Modifier.padding(vertical = 15.dp, horizontal = 10.dp)) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-      OutlinedTextField(
-          value = tokenWithValue.token.address,
-          onValueChange = {},
-          readOnly = true,
-          label = { Text("Address") },
-          singleLine = true,
-          modifier = Modifier.weight(1f),
-      )
-      CopyIconButton("token_address", tokenWithValue.token.address, "Copied token address")
-    }
-    Row(verticalAlignment = Alignment.CenterVertically) {
-      OutlinedTextField(
-          value = tokenWithValue.token.name,
-          onValueChange = {},
-          label = { Text("Name") },
-          singleLine = true,
-          readOnly = true,
-          modifier = Modifier.weight(1f),
-      )
-      CopyIconButton("token_name", tokenWithValue.token.name, "Copied token name")
-    }
-    Row(verticalAlignment = Alignment.CenterVertically) {
-      OutlinedTextField(
-          value = tokenWithValue.value.usd.toString(),
-          onValueChange = {},
-          label = { Text("Value in USD") },
-          singleLine = true,
-          readOnly = true,
-          modifier = Modifier.weight(1f),
-      )
-      CopyIconButton("token_value", tokenWithValue.value.usd.toString(), "Copied token value")
-    }
+    ViewTokenBottomSheetRow(
+        value = tokenWithValue.token.address,
+        label = "Address",
+        toastText = "Copied token address",
+    )
+    ViewTokenBottomSheetRow(
+        value = tokenWithValue.token.name,
+        label = "Name",
+        toastText = "Copied token name",
+    )
+    ViewTokenBottomSheetRow(
+        value = tokenWithValue.value.usd.toString(),
+        label = "Value in USD",
+        toastText = "Copied token value",
+    )
     OutlinedButton(
         onClick = {
           // TODO: switch to alerts tab with bottom sheet shown with 2 inputs for sell/buy target
@@ -228,6 +205,21 @@ private fun ViewTokenBottomSheetContent(viewModel: MainViewModel = hiltViewModel
         },
         modifier = Modifier.fillMaxWidth(),
     ) { Text(text = "Add alert") }
+  }
+}
+
+@Composable
+private fun ViewTokenBottomSheetRow(value: String, label: String, toastText: String) {
+  Row(verticalAlignment = Alignment.CenterVertically) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = {},
+        readOnly = true,
+        label = { Text(label) },
+        singleLine = true,
+        modifier = Modifier.weight(1f),
+    )
+    CopyIconButton(value, toastText)
   }
 }
 
@@ -375,7 +367,7 @@ private fun DeleteTokenDialog(
 ) {
   AlertDialog(
       onDismissRequest = dismiss,
-      title = { Text(text = "Delete token") },
+      title = { Text(text = "Delete token", fontWeight = FontWeight.Bold) },
       text = {
         Text(text = "Do you really want to delete ${token.name} with all associated alerts?")
       },

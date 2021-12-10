@@ -25,6 +25,7 @@ constructor(
     private val getTokenWithValue: GetTokenWithValue,
     private val saveTokenWithValue: SaveTokenWithValue,
     private val deleteToken: DeleteToken,
+    private val addAlert: AddAlert,
     val getAlertsFlow: GetAlertsFlow,
     val getTokensFlow: GetTokensFlow,
 ) : ViewModel() {
