@@ -9,16 +9,16 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.getSystemService
@@ -53,11 +54,13 @@ import kotlinx.coroutines.*
 import retrofit2.HttpException
 
 @AndroidEntryPoint
-@ExperimentalCoilApi
-@ExperimentalCoroutinesApi
-@ExperimentalMaterialApi
-@ExperimentalPagerApi
-@FlowPreview
+@OptIn(
+    ExperimentalCoilApi::class,
+    ExperimentalCoroutinesApi::class,
+    ExperimentalMaterialApi::class,
+    ExperimentalPagerApi::class,
+    FlowPreview::class,
+)
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -75,11 +78,13 @@ private enum class BottomSheetDialogMode {
 }
 
 @Composable
-@ExperimentalCoilApi
-@ExperimentalCoroutinesApi
-@ExperimentalMaterialApi
-@ExperimentalPagerApi
-@FlowPreview
+@OptIn(
+    ExperimentalCoilApi::class,
+    ExperimentalCoroutinesApi::class,
+    ExperimentalMaterialApi::class,
+    ExperimentalPagerApi::class,
+    FlowPreview::class,
+)
 private fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
   val scope = rememberCoroutineScope()
   val pageState = rememberPagerState()
@@ -94,21 +99,15 @@ private fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
   }
   ModalBottomSheetLayout(
       sheetContent = {
-        var tokenWithValueForAlertBeingAdded by rememberSaveable {
-          mutableStateOf<TokenWithValue?>(null)
-        }
         when (bottomSheetDialogMode) {
           BottomSheetDialogMode.ADD_TOKEN -> AddTokenBottomSheetContent(modalBottomSheetState)
           BottomSheetDialogMode.VIEW_TOKEN -> {
             ViewTokenBottomSheetContent(
-                onAddAlertClick = {
-                  tokenWithValueForAlertBeingAdded = it
-                  bottomSheetDialogMode = BottomSheetDialogMode.ADD_ALERT
-                },
+                onAddAlertClick = { bottomSheetDialogMode = BottomSheetDialogMode.ADD_ALERT },
             )
           }
-          BottomSheetDialogMode.ADD_ALERT -> {}
-          BottomSheetDialogMode.EDIT_ALERT -> {}
+          BottomSheetDialogMode.ADD_ALERT -> AddAlertBottomSheetContent()
+          BottomSheetDialogMode.EDIT_ALERT -> Box(modifier = Modifier.size(20.dp))
         }
       },
       sheetState = modalBottomSheetState,
@@ -171,25 +170,7 @@ private fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
 }
 
 @Composable
-private fun CopyIconButton(text: String, toastText: String) {
-  Box(contentAlignment = Alignment.Center) {
-    val context = LocalContext.current
-    IconButton(
-        onClick = {
-          val clip = ClipData.newPlainText("view_token_copied_value", text)
-          getSystemService(context, ClipboardManager::class.java)?.let { manager ->
-            manager.setPrimaryClip(clip)
-            Toast.makeText(context, toastText, Toast.LENGTH_SHORT).show()
-          }
-        },
-    ) { Icon(painterResource(R.drawable.ic_baseline_content_copy_24), "") }
-  }
-}
-
-@Composable
-@ExperimentalCoroutinesApi
-@ExperimentalMaterialApi
-@FlowPreview
+@OptIn(ExperimentalCoroutinesApi::class, ExperimentalMaterialApi::class, FlowPreview::class)
 private fun ViewTokenBottomSheetContent(
     onAddAlertClick: (TokenWithValue) -> Unit,
     viewModel: MainViewModel = hiltViewModel()
@@ -197,62 +178,229 @@ private fun ViewTokenBottomSheetContent(
   val tokenWithValue: TokenWithValue =
       viewModel.tokenWithValueBeingViewed.value ?: throw IllegalArgumentException()
   Column(modifier = Modifier.padding(vertical = 15.dp, horizontal = 10.dp)) {
-    ViewTokenBottomSheetRow(
-        value = tokenWithValue.token.address,
-        label = "Address",
-        toastText = "Copied token address",
-    )
-    ViewTokenBottomSheetRow(
-        value = tokenWithValue.token.name,
-        label = "Name",
-        toastText = "Copied token name",
-    )
-    ViewTokenBottomSheetRow(
-        value = tokenWithValue.value.usd.toString(),
-        label = "Value in USD",
-        toastText = "Copied token value",
-    )
+    TokenValueBottomSheetColumnContent(tokenWithValue)
     OutlinedButton(
         onClick = { onAddAlertClick(tokenWithValue) },
+        modifier = Modifier.fillMaxWidth(),
+    ) { Text(text = "Create an alert") }
+  }
+}
+
+@Composable
+private fun TokenValueBottomSheetColumnContent(tokenWithValue: TokenWithValue) {
+  ViewTokenBottomSheetTextField(
+      value = tokenWithValue.token.address,
+      label = "Address",
+      toastText = "Copied token address",
+  )
+  ViewTokenBottomSheetTextField(
+      value = tokenWithValue.token.name,
+      label = "Name",
+      toastText = "Copied token name",
+  )
+  ViewTokenBottomSheetTextField(
+      value = tokenWithValue.value.usd.toString(),
+      label = "Value in USD",
+      toastText = "Copied token value",
+  )
+}
+
+@Composable
+private fun ViewTokenBottomSheetTextField(value: String, label: String, toastText: String) {
+  OutlinedTextField(
+      value = value,
+      onValueChange = {},
+      readOnly = true,
+      label = { Text(label) },
+      singleLine = true,
+      trailingIcon = { CopyIconButton(value, toastText) },
+      modifier = Modifier.fillMaxWidth(),
+  )
+}
+
+@Composable
+private fun CopyIconButton(text: String, toastText: String) {
+  val context = LocalContext.current
+  IconButton(
+      onClick = {
+        val clip = ClipData.newPlainText("view_token_copied_value", text)
+        getSystemService(context, ClipboardManager::class.java)?.let { manager ->
+          manager.setPrimaryClip(clip)
+          Toast.makeText(context, toastText, Toast.LENGTH_SHORT).show()
+        }
+      },
+  ) { Icon(painterResource(R.drawable.ic_baseline_content_copy_24), "") }
+}
+
+@Composable
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+fun AddAlertBottomSheetContent(viewModel: MainViewModel = hiltViewModel()) {
+  val tokenWithValue: TokenWithValue =
+      viewModel.tokenWithValueBeingViewed.value ?: throw IllegalArgumentException()
+
+  var sellTarget by rememberSaveable { mutableStateOf("") }
+  var buyTarget by rememberSaveable { mutableStateOf("") }
+
+  fun isTargetValid(target: String): Boolean = target.toDoubleOrNull() != null
+  fun isTargetValidOrEmpty(target: String): Boolean = target.isEmpty() || isTargetValid(target)
+
+  var sellTargetX by rememberSaveable { mutableStateOf(1.0) }
+  var buyTargetX by rememberSaveable { mutableStateOf(1.0) }
+
+  val scrollState = rememberScrollState()
+
+  Column(
+      modifier = Modifier.padding(vertical = 15.dp, horizontal = 10.dp).verticalScroll(scrollState),
+  ) {
+    BottomSheetContentTitleText(text = "Add a new alert")
+    TokenValueBottomSheetColumnContent(tokenWithValue)
+
+    OutlinedTextField(
+        value = buyTarget,
+        onValueChange = {
+          buyTarget = it
+          buyTargetX =
+              if (isTargetValid(buyTarget)) {
+                buyTarget.toDouble() / tokenWithValue.value.usd
+              } else {
+                1.0
+              }
+        },
+        isError =
+            !isTargetValidOrEmpty(buyTarget) || (isTargetValid(buyTarget) && buyTargetX >= 1.0),
+        label = { Text(text = "Buy target") },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        trailingIcon = {
+          IconButton(
+              onClick = {
+                buyTarget = ""
+                buyTargetX = 1.0
+              },
+          ) { Icon(Icons.Default.Clear, "") }
+        },
+        modifier = Modifier.fillMaxWidth(),
+    )
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(vertical = 5.dp).fillMaxWidth(),
+    ) {
+      OutlinedButton(
+          enabled = buyTargetX > 0.1 && isTargetValidOrEmpty(buyTarget),
+          onClick = {
+            buyTargetX -= .1
+            buyTarget = (tokenWithValue.value.usd * buyTargetX).toString()
+          },
+          modifier = Modifier.weight(1f),
+      ) { Text("-0.1X") }
+      OutlinedButton(
+          enabled = buyTargetX < 1.0 && isTargetValidOrEmpty(buyTarget),
+          onClick = {
+            buyTargetX += .1
+            buyTarget = (tokenWithValue.value.usd * buyTargetX).toString()
+          },
+          modifier = Modifier.weight(1f),
+      ) { Text("0.1X") }
+      Box(
+          contentAlignment = Alignment.Center,
+          modifier = Modifier.padding(horizontal = 3.dp).fillMaxHeight(),
+      ) {
+        Text(
+            text = "${String.format("%.02f", buyTargetX)}X",
+            style = Typography.subtitle1.copy(fontWeight = FontWeight.Bold),
+        )
+      }
+    }
+
+    OutlinedTextField(
+        value = sellTarget,
+        onValueChange = {
+          sellTarget = it
+          sellTargetX =
+              if (isTargetValid(sellTarget)) {
+                sellTarget.toDouble() / tokenWithValue.value.usd
+              } else {
+                1.0
+              }
+        },
+        isError =
+            !isTargetValidOrEmpty(sellTarget) || (isTargetValid(sellTarget) && sellTargetX <= 1.0),
+        label = { Text(text = "Sell target") },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        trailingIcon = {
+          IconButton(
+              onClick = {
+                sellTarget = ""
+                sellTargetX = 1.0
+              },
+          ) { Icon(Icons.Default.Clear, "") }
+        },
+        modifier = Modifier.fillMaxWidth(),
+    )
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(vertical = 5.dp).fillMaxWidth(),
+    ) {
+      OutlinedButton(
+          enabled = sellTargetX > 1.0 && isTargetValid(sellTarget),
+          onClick = {
+            sellTargetX -= 1.0
+            sellTarget = (tokenWithValue.value.usd * sellTargetX).toString()
+          },
+          modifier = Modifier.weight(1f),
+      ) { Text("-1X") }
+      OutlinedButton(
+          enabled = sellTargetX > 1.0 && isTargetValidOrEmpty(sellTarget),
+          onClick = {
+            sellTargetX -= .1
+            sellTarget = (tokenWithValue.value.usd * sellTargetX).toString()
+          },
+          modifier = Modifier.weight(1f),
+      ) { Text("-0.1X") }
+      OutlinedButton(
+          enabled = isTargetValidOrEmpty(sellTarget),
+          onClick = {
+            sellTargetX += .1
+            sellTarget = (tokenWithValue.value.usd * sellTargetX).toString()
+          },
+          modifier = Modifier.weight(1f),
+      ) { Text("0.1X") }
+      OutlinedButton(
+          enabled = isTargetValidOrEmpty(sellTarget),
+          onClick = {
+            sellTargetX += 1.0
+            sellTarget = (tokenWithValue.value.usd * sellTargetX).toString()
+          },
+          modifier = Modifier.weight(1f),
+      ) { Text("1X") }
+      Box(
+          contentAlignment = Alignment.Center,
+          modifier = Modifier.padding(horizontal = 3.dp).fillMaxHeight(),
+      ) {
+        Text(
+            text = "${String.format("%.02f", sellTargetX)}X",
+            style = Typography.subtitle1.copy(fontWeight = FontWeight.Bold),
+        )
+      }
+    }
+
+    // TODO: show warning if sell target is below current price
+
+    OutlinedButton(
+        onClick = {},
         modifier = Modifier.fillMaxWidth(),
     ) { Text(text = "Add alert") }
   }
 }
 
 @Composable
-private fun ViewTokenBottomSheetRow(value: String, label: String, toastText: String) {
-  Row(verticalAlignment = Alignment.CenterVertically) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = {},
-        readOnly = true,
-        label = { Text(label) },
-        singleLine = true,
-        modifier = Modifier.weight(1f),
-    )
-    CopyIconButton(value, toastText)
-  }
-}
-
-@Composable
-@ExperimentalCoroutinesApi
-@ExperimentalMaterialApi
-@FlowPreview
+@OptIn(ExperimentalCoroutinesApi::class, ExperimentalMaterialApi::class, FlowPreview::class)
 private fun AddTokenBottomSheetContent(
     modalBottomSheetState: ModalBottomSheetState,
     viewModel: MainViewModel = hiltViewModel()
 ) {
   val scope = rememberCoroutineScope()
   Column(modifier = Modifier.padding(vertical = 15.dp, horizontal = 10.dp)) {
-    Text(
-        text = "Add a new token",
-        style =
-            Typography.h6.copy(
-                color = MaterialTheme.colors.primary,
-                fontWeight = FontWeight.Bold,
-            ),
-        modifier = Modifier.padding(horizontal = 5.dp),
-    )
+    BottomSheetContentTitleText("Add a new token")
     val tokenAddress = viewModel.tokenAddress.collectAsState(initial = "")
     OutlinedTextField(
         value = tokenAddress.value,
@@ -356,8 +504,20 @@ private fun AddTokenBottomSheetContent(
 }
 
 @Composable
-@ExperimentalCoroutinesApi
-@FlowPreview
+private fun BottomSheetContentTitleText(text: String) {
+  Text(
+      text = text,
+      style =
+          Typography.h6.copy(
+              color = MaterialTheme.colors.primary,
+              fontWeight = FontWeight.Bold,
+          ),
+      modifier = Modifier.padding(horizontal = 5.dp),
+  )
+}
+
+@Composable
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 private fun RetryLoadingTokenButton(
     scope: CoroutineScope,
     viewModel: MainViewModel = hiltViewModel()
@@ -369,8 +529,7 @@ private fun RetryLoadingTokenButton(
 }
 
 @Composable
-@ExperimentalCoroutinesApi
-@FlowPreview
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 private fun DeleteTokenDialog(
     token: Token,
     dismiss: () -> Unit,
@@ -407,10 +566,12 @@ private fun DeleteTokenDialog(
 }
 
 @Composable
-@ExperimentalCoroutinesApi
-@ExperimentalMaterialApi
-@ExperimentalPagerApi
-@FlowPreview
+@OptIn(
+    ExperimentalCoroutinesApi::class,
+    ExperimentalMaterialApi::class,
+    ExperimentalPagerApi::class,
+    FlowPreview::class,
+)
 private fun AlertsList(viewModel: MainViewModel = hiltViewModel()) {
   val alerts = viewModel.alertsFlow.collectAsState(initial = emptyList())
   if (alerts.value.isEmpty()) {
@@ -425,11 +586,13 @@ private fun AlertsList(viewModel: MainViewModel = hiltViewModel()) {
 }
 
 @Composable
-@ExperimentalCoilApi
-@ExperimentalCoroutinesApi
-@ExperimentalMaterialApi
-@ExperimentalPagerApi
-@FlowPreview
+@OptIn(
+    ExperimentalCoilApi::class,
+    ExperimentalCoroutinesApi::class,
+    ExperimentalMaterialApi::class,
+    ExperimentalPagerApi::class,
+    FlowPreview::class,
+)
 private fun TokensWithValueList(
     onItemClick: (TokenWithValue) -> Unit,
     viewModel: MainViewModel = hiltViewModel()
@@ -456,10 +619,12 @@ private fun TokensWithValueList(
 }
 
 @Composable
-@ExperimentalCoilApi
-@ExperimentalCoroutinesApi
-@ExperimentalMaterialApi
-@FlowPreview
+@OptIn(
+    ExperimentalCoilApi::class,
+    ExperimentalCoroutinesApi::class,
+    ExperimentalMaterialApi::class,
+    FlowPreview::class,
+)
 private fun TokenWithValueListItem(
     tokenWithValue: TokenWithValue,
     onItemClick: (TokenWithValue) -> Unit,
@@ -483,7 +648,7 @@ private fun TokenWithValueListItem(
 }
 
 @Composable
-@ExperimentalCoilApi
+@OptIn(ExperimentalCoilApi::class)
 private fun TokenIcon(token: Token) {
   // TODO: fix coil
   val painter =
