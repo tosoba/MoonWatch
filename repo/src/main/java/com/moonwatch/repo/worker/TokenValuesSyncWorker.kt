@@ -37,8 +37,8 @@ constructor(
         updatedValues[token.address] =
             TokenValueEntity(
                 address = token.address,
-                usd = tokenData.priceInUsd.toDouble(),
-                bnb = tokenData.priceInBnb.toDouble(),
+                usd = tokenData.priceInUsd.toBigDecimal(),
+                bnb = tokenData.priceInBnb.toBigDecimal(),
                 updatedAt = Date(updatedAtMillis),
             )
         delay(500L)

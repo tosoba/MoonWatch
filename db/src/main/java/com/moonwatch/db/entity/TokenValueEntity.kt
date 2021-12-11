@@ -2,6 +2,7 @@ package com.moonwatch.db.entity
 
 import androidx.room.*
 import com.moonwatch.core.model.ITokenValue
+import java.math.BigDecimal
 import java.util.*
 
 @Entity(
@@ -23,9 +24,9 @@ import java.util.*
 )
 data class TokenValueEntity(
     override val address: String,
-    override val usd: Double,
-    val bnb: Double? = null,
-    val eth: Double? = null,
+    override val usd: BigDecimal,
+    val bnb: BigDecimal? = null,
+    val eth: BigDecimal? = null,
     @ColumnInfo(name = "updated_at") override val updatedAt: Date
 ) : ITokenValue {
   @PrimaryKey(autoGenerate = true) var id: Long = 0

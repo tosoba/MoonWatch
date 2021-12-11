@@ -2,6 +2,7 @@ package com.moonwatch.model
 
 import android.os.Parcelable
 import com.moonwatch.core.model.ITokenAlert
+import java.math.BigDecimal
 import java.util.*
 import kotlinx.parcelize.Parcelize
 
@@ -12,8 +13,8 @@ data class TokenAlert(
     override val active: Boolean,
     override val createdAt: Date,
     override val lastFiredAt: Date?,
-    override val sellPriceTargetUsd: Double?,
-    override val buyPriceTargetUsd: Double?,
+    override val sellPriceTargetUsd: BigDecimal?,
+    override val buyPriceTargetUsd: BigDecimal?,
 ) : ITokenAlert, Parcelable {
   constructor(
       other: ITokenAlert

@@ -1,5 +1,6 @@
 package com.moonwatch.core.model
 
+import java.math.BigDecimal
 import java.util.*
 
 interface ITokenAlert {
@@ -8,6 +9,6 @@ interface ITokenAlert {
   val active: Boolean
   val createdAt: Date
   val lastFiredAt: Date?
-  val sellPriceTargetUsd: Double?
-  val buyPriceTargetUsd: Double?
+  val sellPriceTargetUsd: BigDecimal?
+  val buyPriceTargetUsd: BigDecimal?
 }

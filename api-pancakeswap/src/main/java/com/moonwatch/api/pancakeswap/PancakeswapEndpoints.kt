@@ -1,6 +1,6 @@
 package com.moonwatch.api.pancakeswap
 
-import PancakeswapTokenResponse
+import com.moonwatch.api.pancakeswap.model.PancakeswapTokenResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
 

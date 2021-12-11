@@ -1,6 +1,9 @@
+package com.moonwatch.api.pancakeswap.model
+
 import com.moonwatch.core.model.ITokenValue
 import com.moonwatch.core.model.ITokenWithValue
 import com.squareup.moshi.Json
+import java.math.BigDecimal
 import java.util.*
 
 data class PancakeswapTokenResponse(
@@ -15,8 +18,8 @@ data class PancakeswapTokenResponse(
   override val address: String
     get() = requireNotNull(tokenAddress) { "Token address is not set." }
 
-  override val usd: Double
-    get() = token.priceInUsd.toDouble()
+  override val usd: BigDecimal
+    get() = token.priceInUsd.toBigDecimal()
 
   override val updatedAt: Date
     get() = Date(updatedAtMillis)

@@ -2,13 +2,14 @@ package com.moonwatch.model
 
 import android.os.Parcelable
 import com.moonwatch.core.model.ITokenValue
+import java.math.BigDecimal
 import java.util.*
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class TokenValue(
     override val address: String,
-    override val usd: Double,
+    override val usd: BigDecimal,
     override val updatedAt: Date
 ) : ITokenValue, Parcelable {
   constructor(

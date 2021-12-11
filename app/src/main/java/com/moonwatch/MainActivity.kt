@@ -49,6 +49,7 @@ import com.moonwatch.ui.theme.Purple700
 import com.moonwatch.ui.theme.Typography
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.IOException
+import java.math.BigDecimal
 import java.util.*
 import kotlinx.coroutines.*
 import retrofit2.HttpException
@@ -235,8 +236,7 @@ private fun CopyIconButton(text: String, toastText: String) {
 @Composable
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 fun AddAlertBottomSheetContent(viewModel: MainViewModel = hiltViewModel()) {
-  val tokenWithValue: TokenWithValue =
-      viewModel.tokenWithValueBeingViewed.value ?: throw IllegalArgumentException()
+  val tokenWithValue = viewModel.tokenWithValueBeingViewed.value ?: throw IllegalArgumentException()
 
   var sellTarget by rememberSaveable { mutableStateOf("") }
   var buyTarget by rememberSaveable { mutableStateOf("") }
@@ -244,8 +244,8 @@ fun AddAlertBottomSheetContent(viewModel: MainViewModel = hiltViewModel()) {
   fun isTargetValid(target: String): Boolean = target.toDoubleOrNull() != null
   fun isTargetValidOrEmpty(target: String): Boolean = target.isEmpty() || isTargetValid(target)
 
-  var sellTargetX by rememberSaveable { mutableStateOf(1.0) }
-  var buyTargetX by rememberSaveable { mutableStateOf(1.0) }
+  var sellTargetX by rememberSaveable { mutableStateOf(BigDecimal.ONE) }
+  var buyTargetX by rememberSaveable { mutableStateOf(BigDecimal.ONE) }
 
   val scrollState = rememberScrollState()
 
@@ -261,20 +261,22 @@ fun AddAlertBottomSheetContent(viewModel: MainViewModel = hiltViewModel()) {
           buyTarget = it
           buyTargetX =
               if (isTargetValid(buyTarget)) {
-                buyTarget.toDouble() / tokenWithValue.value.usd
+                buyTarget.toBigDecimal() / tokenWithValue.value.usd
               } else {
-                1.0
+                BigDecimal.ONE
               }
         },
         isError =
-            !isTargetValidOrEmpty(buyTarget) || (isTargetValid(buyTarget) && buyTargetX >= 1.0),
+            !isTargetValidOrEmpty(buyTarget) ||
+                (isTargetValid(buyTarget) && buyTargetX >= BigDecimal.ONE),
         label = { Text(text = "Buy target") },
+        singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         trailingIcon = {
           IconButton(
               onClick = {
                 buyTarget = ""
-                buyTargetX = 1.0
+                buyTargetX = BigDecimal.ONE
               },
           ) { Icon(Icons.Default.Clear, "") }
         },
@@ -285,17 +287,17 @@ fun AddAlertBottomSheetContent(viewModel: MainViewModel = hiltViewModel()) {
         modifier = Modifier.padding(vertical = 5.dp).fillMaxWidth(),
     ) {
       OutlinedButton(
-          enabled = buyTargetX > 0.1 && isTargetValidOrEmpty(buyTarget),
+          enabled = buyTargetX > BigDecimal(0.1) && isTargetValidOrEmpty(buyTarget),
           onClick = {
-            buyTargetX -= .1
+            buyTargetX -= BigDecimal(0.1)
             buyTarget = (tokenWithValue.value.usd * buyTargetX).toString()
           },
           modifier = Modifier.weight(1f),
       ) { Text("-0.1X") }
       OutlinedButton(
-          enabled = buyTargetX < 1.0 && isTargetValidOrEmpty(buyTarget),
+          enabled = buyTargetX < BigDecimal.ONE && isTargetValidOrEmpty(buyTarget),
           onClick = {
-            buyTargetX += .1
+            buyTargetX += BigDecimal(0.1)
             buyTarget = (tokenWithValue.value.usd * buyTargetX).toString()
           },
           modifier = Modifier.weight(1f),
@@ -317,20 +319,22 @@ fun AddAlertBottomSheetContent(viewModel: MainViewModel = hiltViewModel()) {
           sellTarget = it
           sellTargetX =
               if (isTargetValid(sellTarget)) {
-                sellTarget.toDouble() / tokenWithValue.value.usd
+                sellTarget.toBigDecimal() / tokenWithValue.value.usd
               } else {
-                1.0
+                BigDecimal.ONE
               }
         },
         isError =
-            !isTargetValidOrEmpty(sellTarget) || (isTargetValid(sellTarget) && sellTargetX <= 1.0),
+            !isTargetValidOrEmpty(sellTarget) ||
+                (isTargetValid(sellTarget) && sellTargetX <= BigDecimal.ONE),
         label = { Text(text = "Sell target") },
+        singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         trailingIcon = {
           IconButton(
               onClick = {
                 sellTarget = ""
-                sellTargetX = 1.0
+                sellTargetX = BigDecimal.ONE
               },
           ) { Icon(Icons.Default.Clear, "") }
         },
@@ -341,17 +345,17 @@ fun AddAlertBottomSheetContent(viewModel: MainViewModel = hiltViewModel()) {
         modifier = Modifier.padding(vertical = 5.dp).fillMaxWidth(),
     ) {
       OutlinedButton(
-          enabled = sellTargetX > 1.0 && isTargetValid(sellTarget),
+          enabled = sellTargetX > BigDecimal.ONE && isTargetValid(sellTarget),
           onClick = {
-            sellTargetX -= 1.0
+            sellTargetX -= BigDecimal.ONE
             sellTarget = (tokenWithValue.value.usd * sellTargetX).toString()
           },
           modifier = Modifier.weight(1f),
       ) { Text("-1X") }
       OutlinedButton(
-          enabled = sellTargetX > 1.0 && isTargetValidOrEmpty(sellTarget),
+          enabled = sellTargetX > BigDecimal.ONE && isTargetValidOrEmpty(sellTarget),
           onClick = {
-            sellTargetX -= .1
+            sellTargetX -= BigDecimal(0.1)
             sellTarget = (tokenWithValue.value.usd * sellTargetX).toString()
           },
           modifier = Modifier.weight(1f),
@@ -359,7 +363,7 @@ fun AddAlertBottomSheetContent(viewModel: MainViewModel = hiltViewModel()) {
       OutlinedButton(
           enabled = isTargetValidOrEmpty(sellTarget),
           onClick = {
-            sellTargetX += .1
+            sellTargetX += BigDecimal(0.1)
             sellTarget = (tokenWithValue.value.usd * sellTargetX).toString()
           },
           modifier = Modifier.weight(1f),
@@ -367,7 +371,7 @@ fun AddAlertBottomSheetContent(viewModel: MainViewModel = hiltViewModel()) {
       OutlinedButton(
           enabled = isTargetValidOrEmpty(sellTarget),
           onClick = {
-            sellTargetX += 1.0
+            sellTargetX += BigDecimal.ONE
             sellTarget = (tokenWithValue.value.usd * sellTargetX).toString()
           },
           modifier = Modifier.weight(1f),
@@ -632,7 +636,21 @@ private fun TokenWithValueListItem(
 ) {
   ListItem(
       icon = { TokenIcon(tokenWithValue.token) },
-      secondaryText = { Text(text = "${tokenWithValue.value.usd}$", style = Typography.subtitle2) },
+      secondaryText = {
+        Row {
+          Text(
+              text = tokenWithValue.value.usd.toPlainString(),
+              style = Typography.subtitle2,
+              maxLines = 1,
+              modifier = Modifier.weight(1f),
+          )
+          Text(
+              text = "$",
+              style = Typography.subtitle2,
+              maxLines = 1,
+          )
+        }
+      },
       trailing = {
         IconButton(onClick = { onDeleteClick(tokenWithValue.token) }) {
           Icon(Icons.Outlined.Delete, "")

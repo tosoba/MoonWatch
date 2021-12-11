@@ -1,3 +1,5 @@
+package com.moonwatch.api.pancakeswap.model
+
 import com.moonwatch.core.model.Chain
 import com.moonwatch.core.model.IToken
 import com.squareup.moshi.Json
