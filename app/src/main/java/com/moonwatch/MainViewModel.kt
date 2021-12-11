@@ -10,6 +10,7 @@ import com.moonwatch.core.usecase.*
 import com.moonwatch.model.TokenAlertWithValue
 import com.moonwatch.model.TokenWithValue
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.math.BigDecimal
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -17,8 +18,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 
-@ExperimentalCoroutinesApi
-@FlowPreview
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
 class MainViewModel
 @Inject
@@ -112,6 +112,16 @@ constructor(
 
   fun deleteToken(address: String) {
     viewModelScope.launch { deleteToken.invoke(address) }
+  }
+
+  fun addAlert(address: String, sellPriceTargetUsd: BigDecimal?, buyPriceTargetUsd: BigDecimal?) {
+    viewModelScope.launch {
+      addAlert.invoke(
+          address,
+          sellPriceTargetUsd = sellPriceTargetUsd,
+          buyPriceTargetUsd = buyPriceTargetUsd,
+      )
+    }
   }
 
   private fun isBscAddressValid(address: String) = address.matches(Regex("^0x\\S{40}\$"))

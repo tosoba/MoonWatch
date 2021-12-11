@@ -50,6 +50,7 @@ import com.moonwatch.ui.theme.Typography
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.IOException
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.util.*
 import kotlinx.coroutines.*
 import retrofit2.HttpException
@@ -101,13 +102,13 @@ private fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
   ModalBottomSheetLayout(
       sheetContent = {
         when (bottomSheetDialogMode) {
-          BottomSheetDialogMode.ADD_TOKEN -> AddTokenBottomSheetContent(modalBottomSheetState)
+          BottomSheetDialogMode.ADD_TOKEN -> SaveTokenBottomSheetContent(modalBottomSheetState)
           BottomSheetDialogMode.VIEW_TOKEN -> {
             ViewTokenBottomSheetContent(
                 onAddAlertClick = { bottomSheetDialogMode = BottomSheetDialogMode.ADD_ALERT },
             )
           }
-          BottomSheetDialogMode.ADD_ALERT -> AddAlertBottomSheetContent()
+          BottomSheetDialogMode.ADD_ALERT -> AddAlertBottomSheetContent(modalBottomSheetState)
           BottomSheetDialogMode.EDIT_ALERT -> Box(modifier = Modifier.size(20.dp))
         }
       },
@@ -178,12 +179,14 @@ private fun ViewTokenBottomSheetContent(
 ) {
   val tokenWithValue: TokenWithValue =
       viewModel.tokenWithValueBeingViewed.value ?: throw IllegalArgumentException()
-  Column(modifier = Modifier.padding(vertical = 15.dp, horizontal = 10.dp)) {
+  Column(modifier = Modifier.padding(horizontal = 10.dp)) {
+    Box(modifier = Modifier.height(15.dp))
     TokenValueBottomSheetColumnContent(tokenWithValue)
     OutlinedButton(
         onClick = { onAddAlertClick(tokenWithValue) },
         modifier = Modifier.fillMaxWidth(),
     ) { Text(text = "Create an alert") }
+    Box(modifier = Modifier.height(15.dp))
   }
 }
 
@@ -234,24 +237,44 @@ private fun CopyIconButton(text: String, toastText: String) {
 }
 
 @Composable
-@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-fun AddAlertBottomSheetContent(viewModel: MainViewModel = hiltViewModel()) {
+@OptIn(ExperimentalCoroutinesApi::class, ExperimentalMaterialApi::class, FlowPreview::class)
+fun AddAlertBottomSheetContent(
+    modalBottomSheetState: ModalBottomSheetState,
+    viewModel: MainViewModel = hiltViewModel(),
+) {
   val tokenWithValue = viewModel.tokenWithValueBeingViewed.value ?: throw IllegalArgumentException()
+  val (token, tokenValue) = tokenWithValue
+  val tokenValueScale = 0.coerceAtLeast(tokenValue.usd.stripTrailingZeros().scale())
 
   var sellTarget by rememberSaveable { mutableStateOf("") }
   var buyTarget by rememberSaveable { mutableStateOf("") }
 
-  fun isTargetValid(target: String): Boolean = target.toDoubleOrNull() != null
+  fun isTargetValid(target: String): Boolean = target.toBigDecimalOrNull() != null
   fun isTargetValidOrEmpty(target: String): Boolean = target.isEmpty() || isTargetValid(target)
 
   var sellTargetX by rememberSaveable { mutableStateOf(BigDecimal.ONE) }
   var buyTargetX by rememberSaveable { mutableStateOf(BigDecimal.ONE) }
 
+  fun BigDecimal.toStringInTokenValueScale(): String =
+      stripTrailingZeros().setScale(tokenValueScale, RoundingMode.HALF_UP).toPlainString()
+
   val scrollState = rememberScrollState()
+  val scope = rememberCoroutineScope()
+
+  var priceTargetValidationMessages by rememberSaveable {
+    mutableStateOf<List<String>>(emptyList())
+  }
+  if (priceTargetValidationMessages.isNotEmpty()) {
+    PriceTargetValidationMessagesDialog(messages = priceTargetValidationMessages) {
+      priceTargetValidationMessages = emptyList()
+    }
+  }
 
   Column(
-      modifier = Modifier.padding(vertical = 15.dp, horizontal = 10.dp).verticalScroll(scrollState),
+      modifier = Modifier.padding(horizontal = 10.dp).verticalScroll(scrollState),
   ) {
+    Box(modifier = Modifier.height(15.dp))
+
     BottomSheetContentTitleText(text = "Add a new alert")
     TokenValueBottomSheetColumnContent(tokenWithValue)
 
@@ -261,7 +284,7 @@ fun AddAlertBottomSheetContent(viewModel: MainViewModel = hiltViewModel()) {
           buyTarget = it
           buyTargetX =
               if (isTargetValid(buyTarget)) {
-                buyTarget.toBigDecimal() / tokenWithValue.value.usd
+                buyTarget.toBigDecimal() / tokenValue.usd
               } else {
                 BigDecimal.ONE
               }
@@ -290,7 +313,7 @@ fun AddAlertBottomSheetContent(viewModel: MainViewModel = hiltViewModel()) {
           enabled = buyTargetX > BigDecimal(0.1) && isTargetValidOrEmpty(buyTarget),
           onClick = {
             buyTargetX -= BigDecimal(0.1)
-            buyTarget = (tokenWithValue.value.usd * buyTargetX).toString()
+            buyTarget = (tokenValue.usd * buyTargetX).toStringInTokenValueScale()
           },
           modifier = Modifier.weight(1f),
       ) { Text("-0.1X") }
@@ -298,19 +321,11 @@ fun AddAlertBottomSheetContent(viewModel: MainViewModel = hiltViewModel()) {
           enabled = buyTargetX < BigDecimal.ONE && isTargetValidOrEmpty(buyTarget),
           onClick = {
             buyTargetX += BigDecimal(0.1)
-            buyTarget = (tokenWithValue.value.usd * buyTargetX).toString()
+            buyTarget = (tokenValue.usd * buyTargetX).toStringInTokenValueScale()
           },
           modifier = Modifier.weight(1f),
-      ) { Text("0.1X") }
-      Box(
-          contentAlignment = Alignment.Center,
-          modifier = Modifier.padding(horizontal = 3.dp).fillMaxHeight(),
-      ) {
-        Text(
-            text = "${String.format("%.02f", buyTargetX)}X",
-            style = Typography.subtitle1.copy(fontWeight = FontWeight.Bold),
-        )
-      }
+      ) { Text("+0.1X") }
+      PriceTargetXText(buyTargetX)
     }
 
     OutlinedTextField(
@@ -319,7 +334,7 @@ fun AddAlertBottomSheetContent(viewModel: MainViewModel = hiltViewModel()) {
           sellTarget = it
           sellTargetX =
               if (isTargetValid(sellTarget)) {
-                sellTarget.toBigDecimal() / tokenWithValue.value.usd
+                sellTarget.toBigDecimal() / tokenValue.usd
               } else {
                 BigDecimal.ONE
               }
@@ -345,10 +360,10 @@ fun AddAlertBottomSheetContent(viewModel: MainViewModel = hiltViewModel()) {
         modifier = Modifier.padding(vertical = 5.dp).fillMaxWidth(),
     ) {
       OutlinedButton(
-          enabled = sellTargetX > BigDecimal.ONE && isTargetValid(sellTarget),
+          enabled = sellTargetX > BigDecimal(2.0) && isTargetValid(sellTarget),
           onClick = {
             sellTargetX -= BigDecimal.ONE
-            sellTarget = (tokenWithValue.value.usd * sellTargetX).toString()
+            sellTarget = (tokenValue.usd * sellTargetX).toStringInTokenValueScale()
           },
           modifier = Modifier.weight(1f),
       ) { Text("-1X") }
@@ -356,7 +371,7 @@ fun AddAlertBottomSheetContent(viewModel: MainViewModel = hiltViewModel()) {
           enabled = sellTargetX > BigDecimal.ONE && isTargetValidOrEmpty(sellTarget),
           onClick = {
             sellTargetX -= BigDecimal(0.1)
-            sellTarget = (tokenWithValue.value.usd * sellTargetX).toString()
+            sellTarget = (tokenValue.usd * sellTargetX).toStringInTokenValueScale()
           },
           modifier = Modifier.weight(1f),
       ) { Text("-0.1X") }
@@ -364,41 +379,93 @@ fun AddAlertBottomSheetContent(viewModel: MainViewModel = hiltViewModel()) {
           enabled = isTargetValidOrEmpty(sellTarget),
           onClick = {
             sellTargetX += BigDecimal(0.1)
-            sellTarget = (tokenWithValue.value.usd * sellTargetX).toString()
+            sellTarget = (tokenValue.usd * sellTargetX).toStringInTokenValueScale()
           },
           modifier = Modifier.weight(1f),
-      ) { Text("0.1X") }
+      ) { Text("+0.1X") }
       OutlinedButton(
           enabled = isTargetValidOrEmpty(sellTarget),
           onClick = {
             sellTargetX += BigDecimal.ONE
-            sellTarget = (tokenWithValue.value.usd * sellTargetX).toString()
+            sellTarget = (tokenValue.usd * sellTargetX).toStringInTokenValueScale()
           },
           modifier = Modifier.weight(1f),
-      ) { Text("1X") }
-      Box(
-          contentAlignment = Alignment.Center,
-          modifier = Modifier.padding(horizontal = 3.dp).fillMaxHeight(),
-      ) {
-        Text(
-            text = "${String.format("%.02f", sellTargetX)}X",
-            style = Typography.subtitle1.copy(fontWeight = FontWeight.Bold),
-        )
-      }
+      ) { Text("+1X") }
+      PriceTargetXText(sellTargetX)
     }
 
-    // TODO: show warning if sell target is below current price
-
+    val context = LocalContext.current
     OutlinedButton(
-        onClick = {},
+        onClick = {
+          val validationMessages = mutableListOf<String>()
+          if (buyTarget.isBlank() && sellTarget.isBlank()) {
+            validationMessages.add("You must specify either a buy or a sell price target.")
+          } else {
+            if (isTargetValid(buyTarget) && buyTarget.toBigDecimal() >= tokenValue.usd) {
+              validationMessages.add(
+                  "Chosen buy price target is larger or equal to current token price.")
+            }
+            if (isTargetValid(sellTarget) && sellTarget.toBigDecimal() <= tokenValue.usd) {
+              validationMessages.add(
+                  "Chosen sell price target is less or equal to current token price.")
+            }
+          }
+
+          if (validationMessages.isEmpty()) {
+            viewModel.addAlert(
+                token.address,
+                sellPriceTargetUsd = sellTarget.toBigDecimalOrNull(),
+                buyPriceTargetUsd = buyTarget.toBigDecimalOrNull(),
+            )
+            scope.launch { modalBottomSheetState.hide() }
+            Toast.makeText(context, "Alert was created.", Toast.LENGTH_SHORT).show()
+          } else {
+            priceTargetValidationMessages = validationMessages
+          }
+        },
         modifier = Modifier.fillMaxWidth(),
     ) { Text(text = "Add alert") }
+
+    Box(modifier = Modifier.height(15.dp))
+  }
+}
+
+@Composable
+fun PriceTargetValidationMessagesDialog(messages: List<String>, dismiss: () -> Unit) {
+  if (messages.isEmpty()) throw IllegalArgumentException()
+  val scrollState = rememberScrollState()
+  AlertDialog(
+      onDismissRequest = dismiss,
+      title = { Text(text = "Price target validation failed.", fontWeight = FontWeight.Bold) },
+      text = {
+        Column(modifier = Modifier.verticalScroll(scrollState)) {
+          for (message in messages) Text(text = message)
+        }
+      },
+      buttons = {
+        Row(modifier = Modifier.padding(all = 8.dp)) {
+          OutlinedButton(modifier = Modifier.fillMaxWidth(), onClick = dismiss) { Text("OK") }
+        }
+      },
+  )
+}
+
+@Composable
+private fun PriceTargetXText(targetX: BigDecimal?) {
+  Box(
+      contentAlignment = Alignment.Center,
+      modifier = Modifier.padding(horizontal = 3.dp).fillMaxHeight(),
+  ) {
+    Text(
+        text = "${String.format("%.02f", targetX)}X",
+        style = Typography.subtitle1.copy(fontWeight = FontWeight.Bold),
+    )
   }
 }
 
 @Composable
 @OptIn(ExperimentalCoroutinesApi::class, ExperimentalMaterialApi::class, FlowPreview::class)
-private fun AddTokenBottomSheetContent(
+private fun SaveTokenBottomSheetContent(
     modalBottomSheetState: ModalBottomSheetState,
     viewModel: MainViewModel = hiltViewModel()
 ) {
@@ -637,17 +704,16 @@ private fun TokenWithValueListItem(
   ListItem(
       icon = { TokenIcon(tokenWithValue.token) },
       secondaryText = {
-        Row {
+        Row(horizontalArrangement = Arrangement.Start) {
+          Text(
+              text = "$",
+              style = Typography.subtitle2,
+          )
           Text(
               text = tokenWithValue.value.usd.toPlainString(),
               style = Typography.subtitle2,
               maxLines = 1,
               modifier = Modifier.weight(1f),
-          )
-          Text(
-              text = "$",
-              style = Typography.subtitle2,
-              maxLines = 1,
           )
         }
       },
