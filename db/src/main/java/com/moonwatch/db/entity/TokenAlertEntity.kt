@@ -30,5 +30,5 @@ data class TokenAlertEntity(
     @ColumnInfo(name = "sell_price_target_usd") override val sellPriceTargetUsd: Double? = null,
     @ColumnInfo(name = "buy_price_target_usd") override val buyPriceTargetUsd: Double? = null,
 ) : ITokenAlert {
-  @PrimaryKey(autoGenerate = true) var id: Long = 0
+  @PrimaryKey(autoGenerate = true) override var id: Long = 0
 }

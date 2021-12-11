@@ -6,8 +6,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.moonwatch.core.android.model.*
 import com.moonwatch.core.ext.withLatestFrom
-import com.moonwatch.core.model.ITokenWithValue
 import com.moonwatch.core.usecase.*
+import com.moonwatch.model.TokenAlertWithValue
+import com.moonwatch.model.TokenWithValue
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -26,22 +27,31 @@ constructor(
     private val saveTokenWithValue: SaveTokenWithValue,
     private val deleteToken: DeleteToken,
     private val addAlert: AddAlert,
-    val getAlertsFlow: GetAlertsFlow,
-    val getTokensFlow: GetTokensFlow,
+    private val getAlertsFlow: GetAlertsFlow,
+    private val getTokensFlow: GetTokensFlow,
 ) : ViewModel() {
+  // TODO: inject saved state handle and save current state in it
+
   private val _tokenAddress = MutableStateFlow("")
   val tokenAddress: Flow<String>
     get() = _tokenAddress
 
-  private val _tokenWithValueBeingAdded = mutableStateOf<Loadable<ITokenWithValue>>(Empty)
-  val tokenWithValueBeingAdded: State<Loadable<ITokenWithValue>>
+  private val _tokenWithValueBeingAdded =
+      mutableStateOf<LoadableParcelable<TokenWithValue>>(LoadableParcelable(Empty))
+  val tokenWithValueBeingAdded: State<LoadableParcelable<TokenWithValue>>
     get() = _tokenWithValueBeingAdded
 
-  private val _tokenWithValueBeingViewed = mutableStateOf<ITokenWithValue?>(null)
-  val tokenWithValueBeingViewed: State<ITokenWithValue?>
+  private val _tokenWithValueBeingViewed = mutableStateOf<TokenWithValue?>(null)
+  val tokenWithValueBeingViewed: State<TokenWithValue?>
     get() = _tokenWithValueBeingViewed
 
   private val _toggleRetryLoadingToken = MutableSharedFlow<Unit>()
+
+  val alertsFlow: Flow<List<TokenAlertWithValue>>
+    get() = getAlertsFlow().map { it.map(::TokenAlertWithValue) }
+
+  val tokensFlow: Flow<List<TokenWithValue>>
+    get() = getTokensFlow().map { it.map(::TokenWithValue) }
 
   init {
     merge(
@@ -69,6 +79,7 @@ constructor(
             emit(FailedFirst(ex))
           }
         }
+        .map { loadable -> loadable.map(::TokenWithValue).parcelize() }
         .onEach(_tokenWithValueBeingAdded::value::set)
         .launchIn(viewModelScope)
   }
@@ -77,7 +88,7 @@ constructor(
     _tokenAddress.value = address
   }
 
-  fun setTokenWithValueBeingViewed(tokenWithValue: ITokenWithValue) {
+  fun setTokenWithValueBeingViewed(tokenWithValue: TokenWithValue) {
     _tokenWithValueBeingViewed.value = tokenWithValue
   }
 
@@ -86,16 +97,16 @@ constructor(
   }
 
   suspend fun saveCurrentToken() {
-    val currentTokenWithValue = _tokenWithValueBeingAdded.value
-    if (currentTokenWithValue !is Ready<ITokenWithValue>) throw IllegalStateException()
+    val currentTokenWithValue = _tokenWithValueBeingAdded.value.loadable
+    if (currentTokenWithValue !is Ready<TokenWithValue>) throw IllegalStateException()
     saveTokenWithValue(
         token = currentTokenWithValue.value.token,
         value = currentTokenWithValue.value.value,
     )
-    _tokenWithValueBeingAdded.value = Empty
+    clearTokenBeingAddedAddress()
   }
 
-  fun cancelAddingToken() {
+  fun clearTokenBeingAddedAddress() {
     _tokenAddress.value = ""
   }
 

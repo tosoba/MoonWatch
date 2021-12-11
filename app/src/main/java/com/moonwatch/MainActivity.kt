@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,8 +41,8 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.moonwatch.core.android.model.*
-import com.moonwatch.core.model.IToken
-import com.moonwatch.core.model.ITokenWithValue
+import com.moonwatch.model.Token
+import com.moonwatch.model.TokenWithValue
 import com.moonwatch.ui.theme.MoonWatchTheme
 import com.moonwatch.ui.theme.Purple700
 import com.moonwatch.ui.theme.Typography
@@ -86,16 +87,26 @@ private fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
   val modalBottomSheetState =
       rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
   val items = MainBottomNavigationItem.values()
-  var bottomSheetDialogMode by remember { mutableStateOf(BottomSheetDialogMode.ADD_TOKEN) }
+  var bottomSheetDialogMode by rememberSaveable { mutableStateOf(BottomSheetDialogMode.ADD_TOKEN) }
 
   BackHandler(enabled = modalBottomSheetState.isVisible) {
     scope.launch { modalBottomSheetState.hide() }
   }
   ModalBottomSheetLayout(
       sheetContent = {
+        var tokenWithValueForAlertBeingAdded by rememberSaveable {
+          mutableStateOf<TokenWithValue?>(null)
+        }
         when (bottomSheetDialogMode) {
           BottomSheetDialogMode.ADD_TOKEN -> AddTokenBottomSheetContent(modalBottomSheetState)
-          BottomSheetDialogMode.VIEW_TOKEN -> ViewTokenBottomSheetContent()
+          BottomSheetDialogMode.VIEW_TOKEN -> {
+            ViewTokenBottomSheetContent(
+                onAddAlertClick = {
+                  tokenWithValueForAlertBeingAdded = it
+                  bottomSheetDialogMode = BottomSheetDialogMode.ADD_ALERT
+                },
+            )
+          }
           BottomSheetDialogMode.ADD_ALERT -> {}
           BottomSheetDialogMode.EDIT_ALERT -> {}
         }
@@ -179,8 +190,11 @@ private fun CopyIconButton(text: String, toastText: String) {
 @ExperimentalCoroutinesApi
 @ExperimentalMaterialApi
 @FlowPreview
-private fun ViewTokenBottomSheetContent(viewModel: MainViewModel = hiltViewModel()) {
-  val tokenWithValue: ITokenWithValue =
+private fun ViewTokenBottomSheetContent(
+    onAddAlertClick: (TokenWithValue) -> Unit,
+    viewModel: MainViewModel = hiltViewModel()
+) {
+  val tokenWithValue: TokenWithValue =
       viewModel.tokenWithValueBeingViewed.value ?: throw IllegalArgumentException()
   Column(modifier = Modifier.padding(vertical = 15.dp, horizontal = 10.dp)) {
     ViewTokenBottomSheetRow(
@@ -199,10 +213,7 @@ private fun ViewTokenBottomSheetContent(viewModel: MainViewModel = hiltViewModel
         toastText = "Copied token value",
     )
     OutlinedButton(
-        onClick = {
-          // TODO: switch to alerts tab with bottom sheet shown with 2 inputs for sell/buy target
-          // (use a single alert bottom sheet content)
-        },
+        onClick = { onAddAlertClick(tokenWithValue) },
         modifier = Modifier.fillMaxWidth(),
     ) { Text(text = "Add alert") }
   }
@@ -248,10 +259,10 @@ private fun AddTokenBottomSheetContent(
         onValueChange = viewModel::setTokenAddress,
         label = { Text("Address") },
         singleLine = true,
-        isError = viewModel.tokenWithValueBeingAdded.value is Failed,
+        isError = viewModel.tokenWithValueBeingAdded.value.loadable is Failed,
         modifier = Modifier.fillMaxWidth(),
     )
-    when (val tokenWithValue = viewModel.tokenWithValueBeingAdded.value) {
+    when (val tokenWithValue = viewModel.tokenWithValueBeingAdded.value.loadable) {
       is Failed -> {
         when (val error = tokenWithValue.error) {
           is HttpException -> {
@@ -315,7 +326,7 @@ private fun AddTokenBottomSheetContent(
           OutlinedButton(
               onClick = {
                 scope.launch {
-                  viewModel.cancelAddingToken()
+                  viewModel.clearTokenBeingAddedAddress()
                   modalBottomSheetState.hide()
                 }
               },
@@ -361,7 +372,7 @@ private fun RetryLoadingTokenButton(
 @ExperimentalCoroutinesApi
 @FlowPreview
 private fun DeleteTokenDialog(
-    token: IToken,
+    token: Token,
     dismiss: () -> Unit,
     viewModel: MainViewModel = hiltViewModel(),
 ) {
@@ -401,7 +412,7 @@ private fun DeleteTokenDialog(
 @ExperimentalPagerApi
 @FlowPreview
 private fun AlertsList(viewModel: MainViewModel = hiltViewModel()) {
-  val alerts = viewModel.getAlertsFlow().collectAsState(initial = emptyList())
+  val alerts = viewModel.alertsFlow.collectAsState(initial = emptyList())
   if (alerts.value.isEmpty()) {
     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
       Text(text = "No saved alerts.", textAlign = TextAlign.Center)
@@ -420,13 +431,13 @@ private fun AlertsList(viewModel: MainViewModel = hiltViewModel()) {
 @ExperimentalPagerApi
 @FlowPreview
 private fun TokensWithValueList(
-    onItemClick: (ITokenWithValue) -> Unit,
+    onItemClick: (TokenWithValue) -> Unit,
     viewModel: MainViewModel = hiltViewModel()
 ) {
-  var tokenBeingDeleted by remember { mutableStateOf<IToken?>(null) }
+  var tokenBeingDeleted by rememberSaveable { mutableStateOf<Token?>(null) }
   tokenBeingDeleted?.let { DeleteTokenDialog(token = it, dismiss = { tokenBeingDeleted = null }) }
 
-  val tokens = viewModel.getTokensFlow().collectAsState(initial = emptyList())
+  val tokens = viewModel.tokensFlow.collectAsState(initial = emptyList())
   if (tokens.value.isEmpty()) {
     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
       Text(text = "No saved tokens.", textAlign = TextAlign.Center)
@@ -450,9 +461,9 @@ private fun TokensWithValueList(
 @ExperimentalMaterialApi
 @FlowPreview
 private fun TokenWithValueListItem(
-    tokenWithValue: ITokenWithValue,
-    onItemClick: (ITokenWithValue) -> Unit,
-    onDeleteClick: (IToken) -> Unit
+    tokenWithValue: TokenWithValue,
+    onItemClick: (TokenWithValue) -> Unit,
+    onDeleteClick: (Token) -> Unit
 ) {
   ListItem(
       icon = { TokenIcon(tokenWithValue.token) },
@@ -473,7 +484,7 @@ private fun TokenWithValueListItem(
 
 @Composable
 @ExperimentalCoilApi
-private fun TokenIcon(token: IToken) {
+private fun TokenIcon(token: Token) {
   // TODO: fix coil
   val painter =
       rememberImagePainter("https://r.poocoin.app/smartchain/assets/${token.address}/logo.png")

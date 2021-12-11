@@ -55,21 +55,30 @@ sealed class Loadable<out T> {
 
   open fun copyWithError(error: Throwable?): Loadable<T> = FailedFirst(error)
 
+  abstract fun <R> map(block: (T) -> R): Loadable<R>
+
   inline fun <reified E> isFailedWith(): Boolean = (this as? Failed)?.error is E
 }
 
+inline fun <reified T : Parcelable> Loadable<T>.parcelize() = LoadableParcelable(this)
+
 sealed class WithValue<T> : Loadable<T>() {
   abstract val value: T
-  abstract fun map(block: (T) -> T): WithValue<T>
 }
 
 sealed class WithoutValue : Loadable<Nothing>()
 
-@Parcelize object Empty : WithoutValue(), Parcelable
+@Parcelize
+object Empty : WithoutValue(), Parcelable {
+  override fun <R> map(block: (Nothing) -> R): Loadable<R> = this
+}
 
 interface LoadingInProgress
 
-@Parcelize object LoadingFirst : WithoutValue(), LoadingInProgress, Parcelable
+@Parcelize
+object LoadingFirst : WithoutValue(), LoadingInProgress, Parcelable {
+  override fun <R> map(block: (Nothing) -> R): Loadable<R> = this
+}
 
 data class LoadingNext<T>(
     override val value: T,
@@ -82,7 +91,7 @@ data class LoadingNext<T>(
 
   override fun copyWithError(error: Throwable?): FailedNext<T> = FailedNext(value, error)
 
-  override fun map(block: (T) -> T): WithValue<T> = LoadingNext(block(value))
+  override fun <R> map(block: (T) -> R): LoadingNext<R> = LoadingNext(block(value))
 }
 
 interface Failed {
@@ -93,6 +102,8 @@ interface Failed {
 data class FailedFirst(override val error: Throwable?) : WithoutValue(), Failed, Parcelable {
   override val copyWithLoadingInProgress: LoadingFirst
     get() = LoadingFirst
+
+  override fun <R> map(block: (Nothing) -> R): Loadable<R> = this
 }
 
 data class FailedNext<T>(
@@ -107,7 +118,7 @@ data class FailedNext<T>(
 
   override fun copyWithError(error: Throwable?): FailedNext<T> = FailedNext(value, error)
 
-  override fun map(block: (T) -> T): WithValue<T> = FailedNext(block(value), error)
+  override fun <R> map(block: (T) -> R): FailedNext<R> = FailedNext(block(value), error)
 }
 
 data class Ready<T>(override val value: T) : WithValue<T>() {
@@ -119,5 +130,5 @@ data class Ready<T>(override val value: T) : WithValue<T>() {
 
   override fun copyWithError(error: Throwable?): FailedNext<T> = FailedNext(value, error)
 
-  override fun map(block: (T) -> T): WithValue<T> = Ready(block(value))
+  override fun <R> map(block: (T) -> R): WithValue<R> = Ready(block(value))
 }
