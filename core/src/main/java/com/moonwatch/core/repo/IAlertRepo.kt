@@ -6,9 +6,14 @@ import kotlinx.coroutines.flow.Flow
 
 interface IAlertRepo {
   fun getTokenAlertsWithValue(): Flow<List<ITokenAlertWithValue>>
+
   suspend fun addAlert(
       address: String,
       sellPriceTargetUsd: BigDecimal?,
       buyPriceTargetUsd: BigDecimal?
   )
+
+  suspend fun deleteAlert(id: Long)
+
+  suspend fun toggleAlertActive(id: Long)
 }

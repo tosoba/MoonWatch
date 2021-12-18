@@ -43,6 +43,7 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.moonwatch.core.android.model.*
 import com.moonwatch.model.Token
+import com.moonwatch.model.TokenAlertWithValue
 import com.moonwatch.model.TokenWithValue
 import com.moonwatch.ui.theme.MoonWatchTheme
 import com.moonwatch.ui.theme.Purple700
@@ -164,7 +165,7 @@ private fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
                 },
             )
           }
-          MainBottomNavigationItem.ALERTS -> AlertsList()
+          MainBottomNavigationItem.ALERTS -> TokenAlertsList()
         }
       }
     }
@@ -601,17 +602,11 @@ private fun RetryLoadingTokenButton(
 
 @Composable
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-private fun DeleteTokenDialog(
-    token: Token,
-    dismiss: () -> Unit,
-    viewModel: MainViewModel = hiltViewModel(),
-) {
+private fun DeleteItemDialog(itemName: String, dismiss: () -> Unit, delete: () -> Unit) {
   AlertDialog(
       onDismissRequest = dismiss,
-      title = { Text(text = "Delete token", fontWeight = FontWeight.Bold) },
-      text = {
-        Text(text = "Do you really want to delete ${token.name} with all associated alerts?")
-      },
+      title = { Text(text = "Delete item", fontWeight = FontWeight.Bold) },
+      text = { Text(text = "Do you really want to delete $itemName?") },
       buttons = {
         val context = LocalContext.current
         Row(
@@ -621,9 +616,9 @@ private fun DeleteTokenDialog(
           OutlinedButton(
               modifier = Modifier.weight(1f),
               onClick = {
-                viewModel.deleteToken(token.address)
+                delete()
                 dismiss()
-                Toast.makeText(context, "${token.name} was deleted.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "$itemName was deleted.", Toast.LENGTH_SHORT).show()
               },
           ) { Text("Confirm") }
           Box(Modifier.size(5.dp))
@@ -643,7 +638,16 @@ private fun DeleteTokenDialog(
     ExperimentalPagerApi::class,
     FlowPreview::class,
 )
-private fun AlertsList(viewModel: MainViewModel = hiltViewModel()) {
+private fun TokenAlertsList(viewModel: MainViewModel = hiltViewModel()) {
+  var tokenAlertBeingDeleted by rememberSaveable { mutableStateOf<TokenAlertWithValue?>(null) }
+  tokenAlertBeingDeleted?.let { tokenAlertWithValue ->
+    DeleteItemDialog(
+        itemName = "${tokenAlertWithValue.token.name} alert",
+        dismiss = { tokenAlertBeingDeleted = null },
+        delete = { viewModel.deleteAlert(tokenAlertWithValue.alert.id) },
+    )
+  }
+
   val alerts = viewModel.alertsFlow.collectAsState(initial = emptyList())
   if (alerts.value.isEmpty()) {
     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
@@ -651,8 +655,65 @@ private fun AlertsList(viewModel: MainViewModel = hiltViewModel()) {
     }
   } else {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-      items(alerts.value) { ListItem { Text(text = it.alert.address) } }
+      items(alerts.value) {
+        ListItem {
+          TokenAlertWithValueListItem(
+              tokenAlertWithValue = it,
+              onItemClick = {},
+              onDeleteClick = { tokenAlertBeingDeleted = it },
+          )
+        }
+      }
     }
+  }
+}
+
+@Composable
+@OptIn(
+    ExperimentalCoilApi::class,
+    ExperimentalCoroutinesApi::class,
+    ExperimentalMaterialApi::class,
+    FlowPreview::class,
+)
+private fun TokenAlertWithValueListItem(
+    tokenAlertWithValue: TokenAlertWithValue,
+    onItemClick: (TokenAlertWithValue) -> Unit,
+    onDeleteClick: (TokenAlertWithValue) -> Unit,
+    viewModel: MainViewModel = hiltViewModel()
+) {
+  ListItem(
+      icon = { TokenIcon(tokenAlertWithValue.token) },
+      secondaryText = {
+        Row(horizontalArrangement = Arrangement.Start) {
+          Text(
+              text = "$",
+              style = Typography.subtitle2,
+          )
+          Text(
+              text = tokenAlertWithValue.value.usd.toPlainString(),
+              style = Typography.subtitle2,
+              maxLines = 1,
+              modifier = Modifier.weight(1f),
+          )
+        }
+      },
+      trailing = {
+        Row {
+          IconButton(onClick = { onDeleteClick(tokenAlertWithValue) }) {
+            Icon(Icons.Outlined.Delete, "")
+          }
+          Switch(
+              checked = tokenAlertWithValue.alert.active,
+              onCheckedChange = { viewModel.toggleAlertActive(tokenAlertWithValue.alert.id) },
+          )
+        }
+      },
+      modifier = Modifier.clickable { onItemClick(tokenAlertWithValue) },
+  ) {
+    Text(
+        text = tokenAlertWithValue.token.name,
+        style = Typography.subtitle1.copy(fontWeight = FontWeight.Bold),
+    )
   }
 }
 
@@ -669,7 +730,13 @@ private fun TokensWithValueList(
     viewModel: MainViewModel = hiltViewModel()
 ) {
   var tokenBeingDeleted by rememberSaveable { mutableStateOf<Token?>(null) }
-  tokenBeingDeleted?.let { DeleteTokenDialog(token = it, dismiss = { tokenBeingDeleted = null }) }
+  tokenBeingDeleted?.let {
+    DeleteItemDialog(
+        itemName = "${it.name} with all associated alerts",
+        dismiss = { tokenBeingDeleted = null },
+        delete = { viewModel.deleteToken(it.address) },
+    )
+  }
 
   val tokens = viewModel.tokensFlow.collectAsState(initial = emptyList())
   if (tokens.value.isEmpty()) {

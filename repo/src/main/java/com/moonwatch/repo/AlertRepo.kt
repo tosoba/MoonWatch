@@ -30,4 +30,12 @@ class AlertRepo @Inject constructor(private val dao: AlertDao) : IAlertRepo {
         ),
     )
   }
+
+  override suspend fun deleteAlert(id: Long) {
+    dao.deleteAlertById(id)
+  }
+
+  override suspend fun toggleAlertActive(id: Long) {
+    dao.updateToggleAlertActiveById(id)
+  }
 }

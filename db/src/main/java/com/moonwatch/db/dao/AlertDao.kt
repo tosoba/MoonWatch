@@ -40,4 +40,6 @@ interface AlertDao {
     WHERE v.updated_at = (SELECT MAX(updated_at) FROM token_value WHERE address = t.address) 
     ORDER BY v.usd DESC""")
   fun selectTokenAlertsWithLatestValueOrderedByCreatedAt(): Flow<List<TokenAlertWithLatestValue>>
+
+  @Query("DELETE FROM token_alert WHERE id = :id") suspend fun deleteAlertById(id: Long)
 }

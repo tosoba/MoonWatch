@@ -27,6 +27,8 @@ constructor(
     private val saveTokenWithValue: SaveTokenWithValue,
     private val deleteToken: DeleteToken,
     private val addAlert: AddAlert,
+    private val deleteAlert: DeleteAlert,
+    private val toggleAlertActive: ToggleAlertActive,
     private val getAlertsFlow: GetAlertsFlow,
     private val getTokensFlow: GetTokensFlow,
 ) : ViewModel() {
@@ -122,6 +124,14 @@ constructor(
           buyPriceTargetUsd = buyPriceTargetUsd,
       )
     }
+  }
+
+  fun deleteAlert(id: Long) {
+    viewModelScope.launch { deleteAlert.invoke(id) }
+  }
+
+  fun toggleAlertActive(id: Long) {
+    viewModelScope.launch { toggleAlertActive.invoke(id) }
   }
 
   private fun isBscAddressValid(address: String) = address.matches(Regex("^0x\\S{40}\$"))
