@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.moonwatch.core.android.model.*
 import com.moonwatch.core.ext.withLatestFrom
 import com.moonwatch.core.usecase.*
+import com.moonwatch.exception.InvalidAddressException
 import com.moonwatch.model.TokenAlertWithValue
 import com.moonwatch.model.TokenWithValue
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -136,5 +137,3 @@ constructor(
 
   private fun isBscAddressValid(address: String) = address.matches(Regex("^0x\\S{40}\$"))
 }
-
-object InvalidAddressException : IllegalArgumentException()
