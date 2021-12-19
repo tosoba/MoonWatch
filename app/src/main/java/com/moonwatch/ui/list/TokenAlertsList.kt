@@ -24,8 +24,6 @@ import com.moonwatch.ui.theme.Typography
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 
-// TODO: alerts list is not filling full width for whatever reason...
-
 @Composable
 @OptIn(
     ExperimentalCoroutinesApi::class,
@@ -50,14 +48,12 @@ fun TokenAlertsList(viewModel: MainViewModel = hiltViewModel()) {
     }
   } else {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-      items(alerts.value) {
-        ListItem {
-          TokenAlertWithValueListItem(
-              tokenAlertWithValue = it,
-              onItemClick = {},
-              onDeleteClick = { tokenAlertBeingDeleted = it },
-          )
-        }
+      items(alerts.value) { tokenAlertWithValue ->
+        TokenAlertWithValueListItem(
+            tokenAlertWithValue = tokenAlertWithValue,
+            onItemClick = {},
+            onDeleteClick = { tokenAlertBeingDeleted = it },
+        )
       }
     }
   }
