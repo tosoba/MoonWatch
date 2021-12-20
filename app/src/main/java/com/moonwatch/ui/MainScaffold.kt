@@ -1,9 +1,7 @@
 package com.moonwatch.ui
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -20,10 +18,7 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.moonwatch.MainViewModel
-import com.moonwatch.ui.bottom.sheet.AddAlertBottomSheetContent
-import com.moonwatch.ui.bottom.sheet.BottomSheetMode
-import com.moonwatch.ui.bottom.sheet.SaveTokenBottomSheetContent
-import com.moonwatch.ui.bottom.sheet.ViewTokenBottomSheetContent
+import com.moonwatch.ui.bottom.sheet.*
 import com.moonwatch.ui.list.TokenAlertsList
 import com.moonwatch.ui.list.TokensWithValueList
 import com.moonwatch.ui.theme.Typography
@@ -60,8 +55,18 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
                 onAddAlertClick = { bottomSheetDialogMode = BottomSheetMode.ADD_ALERT },
             )
           }
-          BottomSheetMode.ADD_ALERT -> AddAlertBottomSheetContent(modalBottomSheetState)
-          BottomSheetMode.EDIT_ALERT -> Box(modifier = Modifier.size(20.dp))
+          BottomSheetMode.ADD_ALERT -> {
+            AddEditAlertBottomSheetContent(
+                modalBottomSheetState,
+                AlertBottomSheetMode.ADD,
+            )
+          }
+          BottomSheetMode.EDIT_ALERT -> {
+            AddEditAlertBottomSheetContent(
+                modalBottomSheetState,
+                AlertBottomSheetMode.EDIT,
+            )
+          }
         }
       },
       sheetState = modalBottomSheetState,
@@ -120,7 +125,14 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
                 },
             )
           }
-          MainBottomNavigationItem.ALERTS -> TokenAlertsList()
+          MainBottomNavigationItem.ALERTS ->
+              TokenAlertsList(
+                  onItemClick = {
+                    bottomSheetDialogMode = BottomSheetMode.EDIT_ALERT
+                    viewModel.setTokenAlertWithValueBeingViewed(it)
+                    scope.launch { modalBottomSheetState.show() }
+                  },
+              )
         }
       }
     }

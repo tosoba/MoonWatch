@@ -31,7 +31,10 @@ import kotlinx.coroutines.FlowPreview
     ExperimentalPagerApi::class,
     FlowPreview::class,
 )
-fun TokenAlertsList(viewModel: MainViewModel = hiltViewModel()) {
+fun TokenAlertsList(
+    onItemClick: (TokenAlertWithValue) -> Unit,
+    viewModel: MainViewModel = hiltViewModel()
+) {
   var tokenAlertBeingDeleted by rememberSaveable { mutableStateOf<TokenAlertWithValue?>(null) }
   tokenAlertBeingDeleted?.let { tokenAlertWithValue ->
     DeleteItemDialog(

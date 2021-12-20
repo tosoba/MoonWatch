@@ -23,7 +23,7 @@ fun ViewTokenBottomSheetContent(
       viewModel.tokenWithValueBeingViewed.value ?: throw IllegalArgumentException()
   Column(modifier = Modifier.padding(horizontal = 10.dp)) {
     Box(modifier = Modifier.height(15.dp))
-    TokenValueBottomSheetColumnContent(tokenWithValue)
+    TokenValueBottomSheetColumnContent(tokenWithValue.token, tokenWithValue.value)
     OutlinedButton(
         onClick = { onAddAlertClick(tokenWithValue) },
         modifier = Modifier.fillMaxWidth(),

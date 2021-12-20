@@ -48,6 +48,10 @@ constructor(
   val tokenWithValueBeingViewed: State<TokenWithValue?>
     get() = _tokenWithValueBeingViewed
 
+  private val _tokenAlertWithValueBeingViewed = mutableStateOf<TokenAlertWithValue?>(null)
+  val tokenAlertWithValueBeingViewed: State<TokenAlertWithValue?>
+    get() = _tokenAlertWithValueBeingViewed
+
   private val _toggleRetryLoadingToken = MutableSharedFlow<Unit>()
 
   val alertsFlow: Flow<List<TokenAlertWithValue>>
@@ -95,6 +99,10 @@ constructor(
     _tokenWithValueBeingViewed.value = tokenWithValue
   }
 
+  fun setTokenAlertWithValueBeingViewed(tokenAlertWithValue: TokenAlertWithValue) {
+    _tokenAlertWithValueBeingViewed.value = tokenAlertWithValue
+  }
+
   suspend fun retryLoadingToken() {
     _toggleRetryLoadingToken.emit(Unit)
   }
@@ -124,6 +132,12 @@ constructor(
           sellPriceTargetUsd = sellPriceTargetUsd,
           buyPriceTargetUsd = buyPriceTargetUsd,
       )
+    }
+  }
+
+  fun editAlert(id: Long, sellPriceTargetUsd: BigDecimal?, buyPriceTargetUsd: BigDecimal?) {
+    viewModelScope.launch {
+      // TODO: editAlert
     }
   }
 
