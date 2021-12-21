@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.annotation.ExperimentalCoilApi
+import com.github.marlonlom.utilities.timeago.TimeAgo
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.moonwatch.MainViewModel
 import com.moonwatch.model.Token
@@ -95,6 +96,12 @@ private fun TokenWithValueListItem(
         IconButton(onClick = { onDeleteClick(tokenWithValue.token) }) {
           Icon(Icons.Outlined.Delete, "")
         }
+      },
+      overlineText = {
+        Text(
+            text = "Last updated ${TimeAgo.using(tokenWithValue.value.updatedAt.time)}",
+            modifier = Modifier.fillMaxWidth(),
+        )
       },
       modifier = Modifier.fillMaxWidth().clickable { onItemClick(tokenWithValue) },
   ) {

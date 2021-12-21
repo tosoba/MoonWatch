@@ -3,7 +3,9 @@ package com.moonwatch.ui
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -27,18 +29,23 @@ fun TokenIcon(token: Token) {
   val painter =
       rememberImagePainter("https://r.poocoin.app/smartchain/assets/${token.address}/logo.png")
   val state = painter.state
-  if (state is ImagePainter.State.Success) {
-    Image(painter = painter, contentDescription = token.name, modifier = Modifier.size(40.dp))
-  } else {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.size(40.dp).clip(CircleShape).background(Purple700),
-    ) {
-      Text(
-          text = token.name.substring(0, 1),
-          style = Typography.h6.copy(fontWeight = FontWeight.Bold),
-          color = Color.White,
-      )
+  Box(
+      contentAlignment = Alignment.Center,
+      modifier = Modifier.height(60.dp).wrapContentWidth(),
+  ) {
+    if (state is ImagePainter.State.Success) {
+      Image(painter = painter, contentDescription = token.name, modifier = Modifier.size(40.dp))
+    } else {
+      Box(
+          contentAlignment = Alignment.Center,
+          modifier = Modifier.size(40.dp).clip(CircleShape).background(Purple700),
+      ) {
+        Text(
+            text = token.name.substring(0, 1),
+            style = Typography.h6.copy(fontWeight = FontWeight.Bold),
+            color = Color.White,
+        )
+      }
     }
   }
 }
