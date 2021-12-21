@@ -41,7 +41,7 @@ fun AddEditAlertBottomSheetContent(
           ?: throw IllegalStateException()
   val tokenValue =
       when (alertBottomSheetMode) {
-        AlertBottomSheetMode.ADD -> viewModel.tokenAlertWithValueBeingViewed.value?.value
+        AlertBottomSheetMode.ADD -> viewModel.tokenWithValueBeingViewed.value?.value
         AlertBottomSheetMode.EDIT -> viewModel.tokenAlertWithValueBeingViewed.value?.value
       }
           ?: throw IllegalStateException()
@@ -258,7 +258,7 @@ fun AddEditAlertBottomSheetContent(
           }
         },
         modifier = Modifier.fillMaxWidth(),
-    ) { Text(text = "Add alert") }
+    ) { Text(text = "Save") }
 
     Box(modifier = Modifier.height(15.dp))
   }

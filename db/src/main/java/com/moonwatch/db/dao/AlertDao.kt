@@ -46,7 +46,8 @@ interface AlertDao {
 
   @Query(
       """UPDATE token_alert 
-          SET sell_price_target_usd = :sellPriceTargetUsd, sell_price_target_usd = :buyPriceTargetUsd""")
+          SET sell_price_target_usd = :sellPriceTargetUsd, sell_price_target_usd = :buyPriceTargetUsd 
+          WHERE id = :id""")
   suspend fun updateTokenAlertPriceTargetsById(
       id: Long,
       sellPriceTargetUsd: BigDecimal?,

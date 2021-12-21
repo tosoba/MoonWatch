@@ -54,7 +54,7 @@ fun TokenAlertsList(
       items(alerts.value) { tokenAlertWithValue ->
         TokenAlertWithValueListItem(
             tokenAlertWithValue = tokenAlertWithValue,
-            onItemClick = {},
+            onItemClick = onItemClick,
             onDeleteClick = { tokenAlertBeingDeleted = it },
         )
       }
