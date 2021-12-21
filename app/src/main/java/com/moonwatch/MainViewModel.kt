@@ -28,6 +28,7 @@ constructor(
     private val saveTokenWithValue: SaveTokenWithValue,
     private val deleteToken: DeleteToken,
     private val addAlert: AddAlert,
+    private val updateAlert: UpdateAlert,
     private val deleteAlert: DeleteAlert,
     private val toggleAlertActive: ToggleAlertActive,
     private val getAlertsFlow: GetAlertsFlow,
@@ -137,7 +138,11 @@ constructor(
 
   fun editAlert(id: Long, sellPriceTargetUsd: BigDecimal?, buyPriceTargetUsd: BigDecimal?) {
     viewModelScope.launch {
-      // TODO: editAlert
+      updateAlert.invoke(
+          id,
+          sellPriceTargetUsd = sellPriceTargetUsd,
+          buyPriceTargetUsd = buyPriceTargetUsd,
+      )
     }
   }
 

@@ -38,4 +38,16 @@ class AlertRepo @Inject constructor(private val dao: AlertDao) : IAlertRepo {
   override suspend fun toggleAlertActive(id: Long) {
     dao.updateToggleAlertActiveById(id)
   }
+
+  override suspend fun updateAlert(
+      id: Long,
+      sellPriceTargetUsd: BigDecimal?,
+      buyPriceTargetUsd: BigDecimal?
+  ) {
+    dao.updateTokenAlertPriceTargetsById(
+        id,
+        sellPriceTargetUsd = sellPriceTargetUsd,
+        buyPriceTargetUsd = buyPriceTargetUsd,
+    )
+  }
 }

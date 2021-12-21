@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import com.moonwatch.db.entity.TokenAlertEntity
 import com.moonwatch.db.result.TokenAlertWithLatestValue
+import java.math.BigDecimal
 import java.util.*
 import kotlinx.coroutines.flow.Flow
 
@@ -42,4 +43,13 @@ interface AlertDao {
   fun selectTokenAlertsWithLatestValueOrderedByCreatedAt(): Flow<List<TokenAlertWithLatestValue>>
 
   @Query("DELETE FROM token_alert WHERE id = :id") suspend fun deleteAlertById(id: Long)
+
+  @Query(
+      """UPDATE token_alert 
+          SET sell_price_target_usd = :sellPriceTargetUsd, sell_price_target_usd = :buyPriceTargetUsd""")
+  suspend fun updateTokenAlertPriceTargetsById(
+      id: Long,
+      sellPriceTargetUsd: BigDecimal?,
+      buyPriceTargetUsd: BigDecimal?
+  )
 }

@@ -57,14 +57,14 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
           }
           BottomSheetMode.ADD_ALERT -> {
             AddEditAlertBottomSheetContent(
-                modalBottomSheetState,
-                AlertBottomSheetMode.ADD,
+                modalBottomSheetState = modalBottomSheetState,
+                alertBottomSheetMode = AlertBottomSheetMode.ADD,
             )
           }
           BottomSheetMode.EDIT_ALERT -> {
             AddEditAlertBottomSheetContent(
-                modalBottomSheetState,
-                AlertBottomSheetMode.EDIT,
+                modalBottomSheetState = modalBottomSheetState,
+                alertBottomSheetMode = AlertBottomSheetMode.EDIT,
             )
           }
         }

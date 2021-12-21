@@ -16,4 +16,6 @@ interface IAlertRepo {
   suspend fun deleteAlert(id: Long)
 
   suspend fun toggleAlertActive(id: Long)
+
+  suspend fun updateAlert(id: Long, sellPriceTargetUsd: BigDecimal?, buyPriceTargetUsd: BigDecimal?)
 }
