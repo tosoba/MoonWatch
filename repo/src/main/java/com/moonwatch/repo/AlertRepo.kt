@@ -6,9 +6,9 @@ import com.moonwatch.db.dao.AlertDao
 import com.moonwatch.db.entity.TokenAlertEntity
 import dagger.Reusable
 import java.math.BigDecimal
-import java.util.*
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
+import org.threeten.bp.LocalDateTime
 
 @Reusable
 class AlertRepo @Inject constructor(private val dao: AlertDao) : IAlertRepo {
@@ -24,7 +24,7 @@ class AlertRepo @Inject constructor(private val dao: AlertDao) : IAlertRepo {
         TokenAlertEntity(
             address = address,
             active = true,
-            createdAt = Date(),
+            createdAt = LocalDateTime.now(),
             sellPriceTargetUsd = sellPriceTargetUsd,
             buyPriceTargetUsd = buyPriceTargetUsd,
         ),

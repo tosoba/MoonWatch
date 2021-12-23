@@ -7,7 +7,7 @@ import androidx.work.WorkerParameters
 import com.moonwatch.db.dao.TokenDao
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import java.util.*
+import org.threeten.bp.LocalDateTime
 
 @HiltWorker
 class DeleteOldTokenValuesWorker
@@ -18,12 +18,7 @@ constructor(
     private val tokenDao: TokenDao
 ) : CoroutineWorker(ctx, params) {
   override suspend fun doWork(): Result {
-    tokenDao.deleteTokenValuesOlderThen(
-        timestamp =
-            Calendar.getInstance().run {
-              add(Calendar.DATE, -7)
-              time
-            })
+    tokenDao.deleteTokenValuesOlderThen(timestamp = LocalDateTime.now().minusDays(7))
     return Result.success()
   }
 }

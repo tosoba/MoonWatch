@@ -18,12 +18,12 @@ import com.moonwatch.core.android.model.LoadingInProgress
 import com.moonwatch.core.android.model.Ready
 import com.moonwatch.exception.InvalidAddressException
 import com.moonwatch.ui.RetryLoadingTokenButton
-import java.io.IOException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
+import java.io.IOException
 
 @Composable
 @OptIn(ExperimentalCoroutinesApi::class, ExperimentalMaterialApi::class, FlowPreview::class)
@@ -96,7 +96,7 @@ fun SaveTokenBottomSheetContent(
             modifier = Modifier.fillMaxWidth(),
         )
         OutlinedTextField(
-            value = tokenWithValue.value.value.usd.toString(),
+            value = tokenWithValue.value.value.usd.toPlainString(),
             onValueChange = {},
             label = { Text("Value in USD") },
             singleLine = true,

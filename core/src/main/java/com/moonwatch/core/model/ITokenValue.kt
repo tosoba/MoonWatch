@@ -1,10 +1,10 @@
 package com.moonwatch.core.model
 
 import java.math.BigDecimal
-import java.util.*
+import org.threeten.bp.LocalDateTime
 
 interface ITokenValue {
   val address: String
   val usd: BigDecimal
-  val updatedAt: Date
+  val updatedAt: LocalDateTime
 }

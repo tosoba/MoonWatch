@@ -5,8 +5,8 @@ import com.moonwatch.core.model.Chain
 import com.moonwatch.db.entity.TokenEntity
 import com.moonwatch.db.entity.TokenValueEntity
 import com.moonwatch.db.result.TokenWithLatestValue
-import java.util.*
 import kotlinx.coroutines.flow.Flow
+import org.threeten.bp.LocalDateTime
 
 @Dao
 interface TokenDao {
@@ -26,7 +26,7 @@ interface TokenDao {
   suspend fun selectTokensByChain(chain: Chain): List<TokenEntity>
 
   @Query("DELETE FROM token_value WHERE updated_at < :timestamp")
-  suspend fun deleteTokenValuesOlderThen(timestamp: Date)
+  suspend fun deleteTokenValuesOlderThen(timestamp: LocalDateTime)
 
   @Query(
       """SELECT t.*, 
@@ -35,7 +35,7 @@ interface TokenDao {
     v.updated_at AS value_updated_at, v.id AS value_id
     FROM token AS t  
     INNER JOIN token_value v ON v.address = t.address 
-    WHERE v.updated_at = (SELECT MAX(updated_at) FROM token_value WHERE address = t.address) 
+    WHERE v.updated_at = (SELECT MAX(updated_at) FROM token_value WHERE address = t.address LIMIT 1) 
     ORDER BY v.usd DESC""")
   fun selectTokensWithLatestValueOrderedByUsdDesc(): Flow<List<TokenWithLatestValue>>
 

@@ -3,6 +3,7 @@ package com.moonwatch
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.*
+import com.jakewharton.threetenabp.AndroidThreeTen
 import com.moonwatch.repo.worker.DeleteOldTokenValuesWorker
 import com.moonwatch.repo.worker.TokenValuesSyncWorker
 import dagger.hilt.android.HiltAndroidApp
@@ -15,6 +16,7 @@ class MoonwatchApp : Application(), Configuration.Provider {
 
   override fun onCreate() {
     super.onCreate()
+    AndroidThreeTen.init(this)
     enqueueTokenValuesSync()
     enqueueDeleteOldTokenValues()
   }

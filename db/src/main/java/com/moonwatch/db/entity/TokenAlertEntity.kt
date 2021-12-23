@@ -3,7 +3,7 @@ package com.moonwatch.db.entity
 import androidx.room.*
 import com.moonwatch.core.model.ITokenAlert
 import java.math.BigDecimal
-import java.util.*
+import org.threeten.bp.LocalDateTime
 
 @Entity(
     tableName = "token_alert",
@@ -26,8 +26,8 @@ import java.util.*
 data class TokenAlertEntity(
     override val address: String,
     override val active: Boolean,
-    @ColumnInfo(name = "created_at") override val createdAt: Date,
-    @ColumnInfo(name = "last_fired_at") override val lastFiredAt: Date? = null,
+    @ColumnInfo(name = "created_at") override val createdAt: LocalDateTime,
+    @ColumnInfo(name = "last_fired_at") override val lastFiredAt: LocalDateTime? = null,
     @ColumnInfo(name = "sell_price_target_usd") override val sellPriceTargetUsd: BigDecimal? = null,
     @ColumnInfo(name = "buy_price_target_usd") override val buyPriceTargetUsd: BigDecimal? = null,
 ) : ITokenAlert {

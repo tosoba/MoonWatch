@@ -3,7 +3,6 @@ package com.moonwatch.ui.bottom.sheet
 import androidx.compose.runtime.Composable
 import com.moonwatch.model.Token
 import com.moonwatch.model.TokenValue
-import com.moonwatch.model.TokenWithValue
 
 @Composable
 fun TokenValueBottomSheetColumnContent(token: Token, value: TokenValue) {
@@ -18,7 +17,7 @@ fun TokenValueBottomSheetColumnContent(token: Token, value: TokenValue) {
       toastText = "Copied token name",
   )
   ViewTokenBottomSheetTextField(
-      value = value.usd.toString(),
+      value = value.usd.toPlainString(),
       label = "Value in USD",
       toastText = "Copied token value",
   )

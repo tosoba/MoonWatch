@@ -14,6 +14,9 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.util.*
 import kotlinx.coroutines.delay
+import org.threeten.bp.Instant
+import org.threeten.bp.LocalDateTime
+import org.threeten.bp.ZoneId
 import timber.log.Timber
 
 @HiltWorker
@@ -39,7 +42,10 @@ constructor(
                 address = token.address,
                 usd = tokenData.priceInUsd.toBigDecimal(),
                 bnb = tokenData.priceInBnb.toBigDecimal(),
-                updatedAt = Date(updatedAtMillis),
+                updatedAt =
+                    Instant.ofEpochMilli(updatedAtMillis)
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDateTime(),
             )
         delay(500L)
       } catch (ex: Exception) {
@@ -76,7 +82,7 @@ constructor(
 
     if (alertIdsToFire.isNotEmpty()) {
       // TODO: create notifications (wake up device)
-      alertDao.updateLastFiredAtForAlerts(alertIdsToFire, Date())
+      alertDao.updateLastFiredAtForAlerts(alertIdsToFire, LocalDateTime.now())
     }
 
     return Result.success()

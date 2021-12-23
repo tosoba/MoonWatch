@@ -27,6 +27,7 @@ import com.moonwatch.ui.dialog.DeleteItemDialog
 import com.moonwatch.ui.theme.Typography
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import org.threeten.bp.ZoneId
 
 @Composable
 @OptIn(
@@ -99,7 +100,8 @@ private fun TokenWithValueListItem(
       },
       overlineText = {
         Text(
-            text = "Last updated ${TimeAgo.using(tokenWithValue.value.updatedAt.time)}",
+            text =
+                "Last updated ${TimeAgo.using(tokenWithValue.value.updatedAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())}",
             modifier = Modifier.fillMaxWidth(),
         )
       },
