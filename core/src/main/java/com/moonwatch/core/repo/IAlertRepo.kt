@@ -1,11 +1,12 @@
 package com.moonwatch.core.repo
 
+import androidx.paging.PagingData
 import com.moonwatch.core.model.ITokenAlertWithValue
 import java.math.BigDecimal
 import kotlinx.coroutines.flow.Flow
 
 interface IAlertRepo {
-  fun getTokenAlertsWithValue(): Flow<List<ITokenAlertWithValue>>
+  fun getTokenAlertsWithValue(pageSize: Int): Flow<PagingData<ITokenAlertWithValue>>
 
   suspend fun addAlert(
       address: String,

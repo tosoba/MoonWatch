@@ -57,11 +57,12 @@ constructor(
 
   private val _toggleRetryLoadingToken = MutableSharedFlow<Unit>()
 
-  val alertsFlow: Flow<List<TokenAlertWithValue>>
-    get() = getAlertsFlow().map { it.map(::TokenAlertWithValue) }
+  val alertsFlow: Flow<PagingData<TokenAlertWithValue>>
+    get() =
+        getAlertsFlow(pageSize = 20).map { it.map(::TokenAlertWithValue) }.distinctUntilChanged()
 
   val tokensFlow: Flow<PagingData<TokenWithValue>>
-    get() = getTokensFlow(pageSize = 20).map { it.map(::TokenWithValue) }
+    get() = getTokensFlow(pageSize = 20).map { it.map(::TokenWithValue) }.distinctUntilChanged()
 
   init {
     merge(

@@ -35,7 +35,7 @@ interface TokenDao {
     v.updated_at AS value_updated_at, v.id AS value_id
     FROM token AS t  
     INNER JOIN token_value v ON v.address = t.address 
-    WHERE v.updated_at = (SELECT MAX(updated_at) FROM token_value WHERE address = t.address LIMIT 1) 
+    WHERE v.id = (SELECT MAX(id) FROM token_value WHERE address = t.address) 
     ORDER BY v.usd DESC""")
   fun selectTokensWithLatestValueOrderedByUsdDesc(): PagingSource<Int, TokenWithLatestValue>
 

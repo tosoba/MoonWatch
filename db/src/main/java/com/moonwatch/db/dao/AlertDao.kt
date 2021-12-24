@@ -1,5 +1,6 @@
 package com.moonwatch.db.dao
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
@@ -38,9 +39,10 @@ interface AlertDao {
     FROM token_alert a 
     INNER JOIN token AS t ON a.address = t.address 
     INNER JOIN token_value v ON v.address = t.address 
-    WHERE v.updated_at = (SELECT MAX(updated_at) FROM token_value WHERE address = t.address LIMIT 1) 
+    WHERE v.id = (SELECT MAX(id) FROM token_value WHERE address = t.address) 
     ORDER BY v.usd DESC""")
-  fun selectTokenAlertsWithLatestValueOrderedByCreatedAt(): Flow<List<TokenAlertWithLatestValue>>
+  fun selectTokenAlertsWithLatestValueOrderedByCreatedAt():
+      PagingSource<Int, TokenAlertWithLatestValue>
 
   @Query("DELETE FROM token_alert WHERE id = :id") suspend fun deleteAlertById(id: Long)
 

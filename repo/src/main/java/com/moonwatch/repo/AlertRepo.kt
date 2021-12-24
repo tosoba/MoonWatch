@@ -1,5 +1,9 @@
 package com.moonwatch.repo
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
 import com.moonwatch.core.model.ITokenAlertWithValue
 import com.moonwatch.core.repo.IAlertRepo
 import com.moonwatch.db.dao.AlertDao
@@ -8,12 +12,17 @@ import dagger.Reusable
 import java.math.BigDecimal
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import org.threeten.bp.LocalDateTime
 
 @Reusable
 class AlertRepo @Inject constructor(private val dao: AlertDao) : IAlertRepo {
-  override fun getTokenAlertsWithValue(): Flow<List<ITokenAlertWithValue>> =
-      dao.selectTokenAlertsWithLatestValueOrderedByCreatedAt()
+  override fun getTokenAlertsWithValue(pageSize: Int): Flow<PagingData<ITokenAlertWithValue>> =
+      Pager(PagingConfig(pageSize = pageSize)) {
+        dao.selectTokenAlertsWithLatestValueOrderedByCreatedAt()
+      }
+          .flow
+          .map { pagingData -> pagingData.map { it } }
 
   override suspend fun addAlert(
       address: String,
