@@ -4,6 +4,8 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.map
 import com.moonwatch.core.android.model.*
 import com.moonwatch.core.ext.withLatestFrom
 import com.moonwatch.core.usecase.*
@@ -58,8 +60,8 @@ constructor(
   val alertsFlow: Flow<List<TokenAlertWithValue>>
     get() = getAlertsFlow().map { it.map(::TokenAlertWithValue) }
 
-  val tokensFlow: Flow<List<TokenWithValue>>
-    get() = getTokensFlow().map { it.map(::TokenWithValue) }
+  val tokensFlow: Flow<PagingData<TokenWithValue>>
+    get() = getTokensFlow(pageSize = 20).map { it.map(::TokenWithValue) }
 
   init {
     merge(

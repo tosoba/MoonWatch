@@ -1,11 +1,11 @@
 package com.moonwatch.db.dao
 
+import androidx.paging.PagingSource
 import androidx.room.*
 import com.moonwatch.core.model.Chain
 import com.moonwatch.db.entity.TokenEntity
 import com.moonwatch.db.entity.TokenValueEntity
 import com.moonwatch.db.result.TokenWithLatestValue
-import kotlinx.coroutines.flow.Flow
 import org.threeten.bp.LocalDateTime
 
 @Dao
@@ -37,7 +37,7 @@ interface TokenDao {
     INNER JOIN token_value v ON v.address = t.address 
     WHERE v.updated_at = (SELECT MAX(updated_at) FROM token_value WHERE address = t.address LIMIT 1) 
     ORDER BY v.usd DESC""")
-  fun selectTokensWithLatestValueOrderedByUsdDesc(): Flow<List<TokenWithLatestValue>>
+  fun selectTokensWithLatestValueOrderedByUsdDesc(): PagingSource<Int, TokenWithLatestValue>
 
   @Query("DELETE FROM token WHERE address = :address")
   suspend fun deleteTokenByAddress(address: String)

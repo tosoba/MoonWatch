@@ -103,7 +103,8 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
             Text(
                 text = "MoonWatch",
                 style = Typography.h6.copy(fontWeight = FontWeight.Bold),
-                modifier = Modifier.padding(horizontal = 5.dp))
+                modifier = Modifier.padding(horizontal = 5.dp),
+            )
           }
         },
         bottomBar = {
@@ -122,7 +123,10 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
                     )
                   },
                   selected = index == pageState.currentPage,
-                  onClick = { scope.launch { pageState.animateScrollToPage(index) } },
+                  onClick = {
+                    bottomAppBarOffsetHeightPx = 0f
+                    scope.launch { pageState.animateScrollToPage(index) }
+                  },
                   selectedContentColor = Color.Magenta,
                   unselectedContentColor = Color.LightGray,
                   label = { Text(text = item.title) },
