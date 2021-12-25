@@ -57,12 +57,15 @@ constructor(
 
   private val _toggleRetryLoadingToken = MutableSharedFlow<Unit>()
 
-  val alertsFlow: Flow<PagingData<TokenAlertWithValue>>
-    get() =
+  val alertsFlow: Flow<PagingData<TokenAlertWithValue>> by
+      lazy(LazyThreadSafetyMode.NONE) {
         getAlertsFlow(pageSize = 20).map { it.map(::TokenAlertWithValue) }.distinctUntilChanged()
+      }
 
-  val tokensFlow: Flow<PagingData<TokenWithValue>>
-    get() = getTokensFlow(pageSize = 20).map { it.map(::TokenWithValue) }.distinctUntilChanged()
+  val tokensFlow: Flow<PagingData<TokenWithValue>> by
+      lazy(LazyThreadSafetyMode.NONE) {
+        getTokensFlow(pageSize = 20).map { it.map(::TokenWithValue) }.distinctUntilChanged()
+      }
 
   init {
     merge(

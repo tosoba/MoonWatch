@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.items
 import coil.annotation.ExperimentalCoilApi
 import com.github.marlonlom.utilities.timeago.TimeAgo
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -50,22 +51,19 @@ fun TokensWithValueList(
   }
 
   val tokens = viewModel.tokensFlow.collectAsLazyPagingItems()
-  LazyColumn(modifier = Modifier.fillMaxSize()) {
-    if (tokens.itemCount == 0) {
-      item {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-          Text(text = "No saved tokens.", textAlign = TextAlign.Center)
-        }
-      }
-    } else {
-      items(tokens.itemCount) { index ->
-        tokens[index]?.let { tokenWithValue ->
-          TokenWithValueListItem(
-              tokenWithValue = tokenWithValue,
-              onItemClick = onItemClick,
-              onDeleteClick = tokenBeingDeleted::value::set,
-          )
-        }
+  if (tokens.itemCount == 0) {
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+      Text(text = "No saved tokens.", textAlign = TextAlign.Center)
+    }
+  } else {
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
+      items(tokens) { tokenWithValue ->
+        if (tokenWithValue == null) return@items
+        TokenWithValueListItem(
+            tokenWithValue = tokenWithValue,
+            onItemClick = onItemClick,
+            onDeleteClick = tokenBeingDeleted::value::set,
+        )
       }
     }
   }

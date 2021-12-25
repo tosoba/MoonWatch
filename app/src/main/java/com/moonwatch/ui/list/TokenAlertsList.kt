@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.items
 import coil.annotation.ExperimentalCoilApi
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.moonwatch.MainViewModel
@@ -48,22 +49,19 @@ fun TokenAlertsList(
   }
 
   val alerts = viewModel.alertsFlow.collectAsLazyPagingItems()
-  LazyColumn(modifier = Modifier.fillMaxSize()) {
-    if (alerts.itemCount == 0) {
-      item {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-          Text(text = "No saved alerts.", textAlign = TextAlign.Center)
-        }
-      }
-    } else {
-      items(alerts.itemCount) { index ->
-        alerts[index]?.let { tokenAlertWithValue ->
-          TokenAlertWithValueListItem(
-              tokenAlertWithValue = tokenAlertWithValue,
-              onItemClick = onItemClick,
-              onDeleteClick = { tokenAlertBeingDeleted = it },
-          )
-        }
+  if (alerts.itemCount == 0) {
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+      Text(text = "No saved alerts.", textAlign = TextAlign.Center)
+    }
+  } else {
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
+      items(alerts) { tokenAlertWithValue ->
+        if (tokenAlertWithValue == null) return@items
+        TokenAlertWithValueListItem(
+            tokenAlertWithValue = tokenAlertWithValue,
+            onItemClick = onItemClick,
+            onDeleteClick = { tokenAlertBeingDeleted = it },
+        )
       }
     }
   }
