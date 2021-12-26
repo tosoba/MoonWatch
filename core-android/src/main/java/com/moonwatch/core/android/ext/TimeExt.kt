@@ -6,3 +6,6 @@ import org.threeten.bp.ZoneId
 
 val Long.millisToLocalDateTime: LocalDateTime
   get() = Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).toLocalDateTime()
+
+val LocalDateTime.toEpochMillisDefault: Long
+  get() = atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()

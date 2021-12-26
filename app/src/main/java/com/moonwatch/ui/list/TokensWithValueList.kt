@@ -7,19 +7,26 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.paging.LoadState
+import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
 import coil.annotation.ExperimentalCoilApi
 import com.github.marlonlom.utilities.timeago.TimeAgo
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.moonwatch.MainViewModel
+import com.moonwatch.core.android.ext.toEpochMillisDefault
+import com.moonwatch.core.model.LoadingInProgress
+import com.moonwatch.core.model.WithValue
 import com.moonwatch.model.Token
 import com.moonwatch.model.TokenWithValue
 import com.moonwatch.ui.TokenIcon
@@ -27,7 +34,9 @@ import com.moonwatch.ui.dialog.DeleteItemDialog
 import com.moonwatch.ui.theme.Typography
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
-import org.threeten.bp.ZoneId
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.map
 
 @Composable
 @OptIn(
@@ -50,14 +59,29 @@ fun TokensWithValueList(
     )
   }
 
-  val tokens = viewModel.tokensFlow.collectAsLazyPagingItems()
-  if (tokens.itemCount == 0) {
+  val tokensFlow = remember {
+    viewModel
+        .tokensFlow
+        .filterIsInstance<WithValue<PagingData<TokenWithValue>>>()
+        .map(WithValue<PagingData<TokenWithValue>>::value::get)
+  }
+  val tokens = tokensFlow.collectAsLazyPagingItems()
+
+  val tokensLoadingFlow = remember {
+    viewModel.tokensFlow.map {
+      val isLoading = it is LoadingInProgress || tokens.loadState.refresh is LoadState.Loading
+      if (!isLoading) {
+        var delaysCount = 0
+        while (tokens.itemCount == 0 && delaysCount++ < 10) delay(100L)
+      }
+      isLoading
+    }
+  }
+  val tokensLoadingState = tokensLoadingFlow.collectAsState(initial = tokens.itemCount == 0)
+
+  if (tokensLoadingState.value) {
     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-      Text(
-          text = "No saved tokens.",
-          textAlign = TextAlign.Center,
-          style = Typography.h6.copy(fontWeight = FontWeight.Bold),
-      )
+      CircularProgressIndicator() // TODO: shimmer?
     }
   } else {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -68,6 +92,18 @@ fun TokensWithValueList(
             onItemClick = onItemClick,
             onDeleteClick = tokenBeingDeleted::value::set,
         )
+      }
+
+      if (tokens.itemCount == 0) {
+        item {
+          Box(contentAlignment = Alignment.Center, modifier = Modifier.fillParentMaxSize()) {
+            Text(
+                text = "No saved tokens.",
+                textAlign = TextAlign.Center,
+                style = Typography.h6.copy(fontWeight = FontWeight.Bold),
+            )
+          }
+        }
       }
     }
   }
@@ -106,7 +142,7 @@ private fun TokenWithValueListItem(
       overlineText = {
         Text(
             text =
-                "Last updated ${TimeAgo.using(tokenWithValue.value.updatedAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())}",
+                "Last updated ${TimeAgo.using(tokenWithValue.value.updatedAt.toEpochMillisDefault)}",
             modifier = Modifier.fillMaxWidth(),
         )
       },

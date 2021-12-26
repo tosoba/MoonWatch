@@ -9,8 +9,7 @@ import com.moonwatch.core.android.delegate.mutableStateOf
 import com.moonwatch.core.android.model.LoadableParcelable
 import com.moonwatch.core.android.model.parcelize
 import com.moonwatch.core.ext.withLatestFrom
-import com.moonwatch.core.model.Empty
-import com.moonwatch.core.model.Ready
+import com.moonwatch.core.model.*
 import com.moonwatch.core.usecase.*
 import com.moonwatch.model.TokenAlertWithValue
 import com.moonwatch.model.TokenWithValue
@@ -50,8 +49,12 @@ constructor(
   val alertsFlow: Flow<PagingData<TokenAlertWithValue>> =
       getAlertsFlow(pageSize = 20).map { it.map(::TokenAlertWithValue) }.distinctUntilChanged()
 
-  val tokensFlow: Flow<PagingData<TokenWithValue>> =
-      getTokensFlow(pageSize = 20).map { it.map(::TokenWithValue) }.distinctUntilChanged()
+  val tokensFlow: Flow<Loadable<PagingData<TokenWithValue>>> =
+      getTokensFlow(pageSize = 20)
+          .map { it.map(::TokenWithValue) }
+          .distinctUntilChanged()
+          .map(PagingData<TokenWithValue>::loadable)
+          .onStart { emit(LoadingFirst) }
 
   private val _toggleRetryLoadingToken = MutableSharedFlow<Unit>()
 
