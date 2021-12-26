@@ -33,8 +33,8 @@ constructor(
     private val updateAlert: UpdateAlert,
     private val deleteAlert: DeleteAlert,
     private val toggleAlertActive: ToggleAlertActive,
-    private val getAlertsFlow: GetAlertsFlow,
-    private val getTokensFlow: GetTokensFlow,
+    getAlertsFlow: GetAlertsFlow,
+    getTokensFlow: GetTokensFlow,
 ) : ViewModel() {
   // TODO: inject saved state handle and save current state in it
 
@@ -57,15 +57,11 @@ constructor(
 
   private val _toggleRetryLoadingToken = MutableSharedFlow<Unit>()
 
-  val alertsFlow: Flow<PagingData<TokenAlertWithValue>> by
-      lazy(LazyThreadSafetyMode.NONE) {
-        getAlertsFlow(pageSize = 20).map { it.map(::TokenAlertWithValue) }.distinctUntilChanged()
-      }
+  val alertsFlow: Flow<PagingData<TokenAlertWithValue>> =
+      getAlertsFlow(pageSize = 20).map { it.map(::TokenAlertWithValue) }.distinctUntilChanged()
 
-  val tokensFlow: Flow<PagingData<TokenWithValue>> by
-      lazy(LazyThreadSafetyMode.NONE) {
-        getTokensFlow(pageSize = 20).map { it.map(::TokenWithValue) }.distinctUntilChanged()
-      }
+  val tokensFlow: Flow<PagingData<TokenWithValue>> =
+      getTokensFlow(pageSize = 20).map { it.map(::TokenWithValue) }.distinctUntilChanged()
 
   init {
     merge(
