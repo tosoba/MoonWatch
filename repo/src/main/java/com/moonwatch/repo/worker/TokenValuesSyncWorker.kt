@@ -5,6 +5,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.moonwatch.api.pancakeswap.PancakeswapEndpoints
+import com.moonwatch.core.android.ext.millisToLocalDateTime
 import com.moonwatch.core.model.Chain
 import com.moonwatch.db.dao.AlertDao
 import com.moonwatch.db.dao.TokenDao
@@ -14,9 +15,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.util.*
 import kotlinx.coroutines.delay
-import org.threeten.bp.Instant
 import org.threeten.bp.LocalDateTime
-import org.threeten.bp.ZoneId
 import timber.log.Timber
 
 @HiltWorker
@@ -30,9 +29,9 @@ constructor(
     private val pancakeswapEndpoints: PancakeswapEndpoints
 ) : CoroutineWorker(ctx, params) {
   override suspend fun doWork(): Result {
-    // TODO: tokens with latest values and values from 1 hour ago
-    // keep global alert percentage change settings in shared prefs
     val bscTokens = tokenDao.selectTokensByChain(Chain.BSC)
+    if (bscTokens.isEmpty()) return Result.success()
+
     val updatedValues = mutableMapOf<String, TokenValueEntity>()
     bscTokens.forEach { token ->
       try {
@@ -42,24 +41,22 @@ constructor(
                 address = token.address,
                 usd = tokenData.priceInUsd.toBigDecimal(),
                 bnb = tokenData.priceInBnb.toBigDecimal(),
-                updatedAt =
-                    Instant.ofEpochMilli(updatedAtMillis)
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDateTime(),
+                updatedAt = updatedAtMillis.millisToLocalDateTime,
             )
         delay(500L)
       } catch (ex: Exception) {
         Timber.tag("GET_BSC_TOKEN").e(ex)
       }
     }
-
     if (updatedValues.isNotEmpty()) {
       tokenDao.insertTokenValues(updatedValues.values.toList())
     } else {
-      return if (bscTokens.isEmpty()) Result.success() else Result.failure()
+      return Result.failure()
     }
 
     val groupedAlerts = alertDao.selectActiveTokenAlerts().groupBy(TokenAlertEntity::address)
+    if (groupedAlerts.isEmpty()) return Result.success()
+
     val alertIdsToFire = mutableListOf<Long>()
     val alertsToFire = mutableListOf<TokenAlertEntity>()
     updatedValues.forEach { (address, value) ->

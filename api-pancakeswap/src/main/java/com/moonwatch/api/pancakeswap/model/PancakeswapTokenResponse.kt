@@ -1,12 +1,11 @@
 package com.moonwatch.api.pancakeswap.model
 
+import com.moonwatch.core.android.ext.millisToLocalDateTime
 import com.moonwatch.core.model.ITokenValue
 import com.moonwatch.core.model.ITokenWithValue
 import com.squareup.moshi.Json
-import org.threeten.bp.Instant
-import org.threeten.bp.LocalDateTime
-import org.threeten.bp.ZoneId
 import java.math.BigDecimal
+import org.threeten.bp.LocalDateTime
 
 data class PancakeswapTokenResponse(
     @field:Json(name = "data") override val token: PancakeswapToken,
@@ -24,7 +23,7 @@ data class PancakeswapTokenResponse(
     get() = token.priceInUsd.toBigDecimal()
 
   override val updatedAt: LocalDateTime
-    get() = Instant.ofEpochMilli(updatedAtMillis).atZone(ZoneId.systemDefault()).toLocalDateTime()
+    get() = updatedAtMillis.millisToLocalDateTime
 
   override val value: ITokenValue
     get() = this
