@@ -1,11 +1,11 @@
 package com.moonwatch
 
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.map
+import com.moonwatch.core.android.delegate.mutableStateOf
 import com.moonwatch.core.android.model.*
 import com.moonwatch.core.ext.withLatestFrom
 import com.moonwatch.core.usecase.*
@@ -26,6 +26,7 @@ import kotlinx.coroutines.withTimeout
 class MainViewModel
 @Inject
 constructor(
+    savedStateHandle: SavedStateHandle,
     private val getTokenWithValue: GetTokenWithValue,
     private val saveTokenWithValue: SaveTokenWithValue,
     private val deleteToken: DeleteToken,
@@ -36,24 +37,14 @@ constructor(
     getAlertsFlow: GetAlertsFlow,
     getTokensFlow: GetTokensFlow,
 ) : ViewModel() {
-  // TODO: inject saved state handle and save current state in it
-
   private val _tokenAddress = MutableStateFlow("")
   val tokenAddress: Flow<String>
     get() = _tokenAddress
 
-  private val _tokenWithValueBeingAdded =
-      mutableStateOf<LoadableParcelable<TokenWithValue>>(LoadableParcelable(Empty))
-  val tokenWithValueBeingAdded: State<LoadableParcelable<TokenWithValue>>
-    get() = _tokenWithValueBeingAdded
-
-  private val _tokenWithValueBeingViewed = mutableStateOf<TokenWithValue?>(null)
-  val tokenWithValueBeingViewed: State<TokenWithValue?>
-    get() = _tokenWithValueBeingViewed
-
-  private val _tokenAlertWithValueBeingViewed = mutableStateOf<TokenAlertWithValue?>(null)
-  val tokenAlertWithValueBeingViewed: State<TokenAlertWithValue?>
-    get() = _tokenAlertWithValueBeingViewed
+  var tokenWithValueBeingAdded: LoadableParcelable<TokenWithValue> by
+      savedStateHandle.mutableStateOf(LoadableParcelable(Empty))
+  var tokenWithValueBeingViewed: TokenWithValue? by savedStateHandle.mutableStateOf(null)
+  var tokenAlertWithValueBeingViewed: TokenAlertWithValue? by savedStateHandle.mutableStateOf(null)
 
   private val _toggleRetryLoadingToken = MutableSharedFlow<Unit>()
 
@@ -63,47 +54,41 @@ constructor(
   val tokensFlow: Flow<PagingData<TokenWithValue>> =
       getTokensFlow(pageSize = 20).map { it.map(::TokenWithValue) }.distinctUntilChanged()
 
+  private val tokenWithValueBeingAddedFlow: Flow<LoadableParcelable<TokenWithValue>>
+    get() {
+      val tokenAddressFlow =
+          merge(
+              tokenAddress.drop(1).debounce(500L).distinctUntilChanged(),
+              _toggleRetryLoadingToken.debounce(500L).withLatestFrom(tokenAddress) { _, address ->
+                address
+              },
+          )
+      return tokenAddressFlow
+          .transformLatest { address ->
+            if (address.isEmpty()) {
+              emit(Empty)
+              return@transformLatest
+            }
+
+            if (!isBscAddressValid(address)) {
+              emit(FailedFirst(InvalidAddressException))
+              return@transformLatest
+            }
+
+            emit(LoadingFirst)
+            try {
+              val tokenWithValue = withTimeout(10_000L) { getTokenWithValue(address) }
+              emit(Ready(tokenWithValue))
+            } catch (ex: Exception) {
+              emit(FailedFirst(ex))
+            }
+          }
+          .map { loadable -> loadable.map(::TokenWithValue).parcelize() }
+          .onEach { tokenWithValueBeingAdded = it }
+    }
+
   init {
-    merge(
-            tokenAddress.drop(1).debounce(500L).distinctUntilChanged(),
-            _toggleRetryLoadingToken.debounce(500L).withLatestFrom(tokenAddress) { _, address ->
-              address
-            },
-        )
-        .transformLatest { address ->
-          if (address.isEmpty()) {
-            emit(Empty)
-            return@transformLatest
-          }
-
-          if (!isBscAddressValid(address)) {
-            emit(FailedFirst(InvalidAddressException))
-            return@transformLatest
-          }
-
-          emit(LoadingFirst)
-          try {
-            val tokenWithValue = withTimeout(10_000L) { getTokenWithValue(address) }
-            emit(Ready(tokenWithValue))
-          } catch (ex: Exception) {
-            emit(FailedFirst(ex))
-          }
-        }
-        .map { loadable -> loadable.map(::TokenWithValue).parcelize() }
-        .onEach(_tokenWithValueBeingAdded::value::set)
-        .launchIn(viewModelScope)
-  }
-
-  fun setTokenAddress(address: String) {
-    _tokenAddress.value = address
-  }
-
-  fun setTokenWithValueBeingViewed(tokenWithValue: TokenWithValue) {
-    _tokenWithValueBeingViewed.value = tokenWithValue
-  }
-
-  fun setTokenAlertWithValueBeingViewed(tokenAlertWithValue: TokenAlertWithValue) {
-    _tokenAlertWithValueBeingViewed.value = tokenAlertWithValue
+    tokenWithValueBeingAddedFlow.launchIn(viewModelScope)
   }
 
   suspend fun retryLoadingToken() {
@@ -111,7 +96,7 @@ constructor(
   }
 
   suspend fun saveCurrentToken() {
-    val currentTokenWithValue = _tokenWithValueBeingAdded.value.loadable
+    val currentTokenWithValue = tokenWithValueBeingAdded.loadable
     if (currentTokenWithValue !is Ready<TokenWithValue>) throw IllegalStateException()
     saveTokenWithValue(
         token = currentTokenWithValue.value.token,
@@ -154,6 +139,10 @@ constructor(
 
   fun toggleAlertActive(id: Long) {
     viewModelScope.launch { toggleAlertActive.invoke(id) }
+  }
+
+  fun setTokenAddress(address: String) {
+    _tokenAddress.value = address
   }
 
   private fun isBscAddressValid(address: String) = address.matches(Regex("^0x\\S{40}\$"))

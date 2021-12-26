@@ -155,7 +155,7 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
             TokensWithValueList(
                 onItemClick = {
                   bottomSheetDialogMode = BottomSheetMode.VIEW_TOKEN
-                  viewModel.setTokenWithValueBeingViewed(it)
+                  viewModel.tokenWithValueBeingViewed = it
                   scope.launch { modalBottomSheetState.show() }
                 },
             )
@@ -164,7 +164,7 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
               TokenAlertsList(
                   onItemClick = {
                     bottomSheetDialogMode = BottomSheetMode.EDIT_ALERT
-                    viewModel.setTokenAlertWithValueBeingViewed(it)
+                    viewModel.tokenAlertWithValueBeingViewed =it
                     scope.launch { modalBottomSheetState.show() }
                   },
               )

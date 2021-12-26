@@ -40,10 +40,10 @@ fun SaveTokenBottomSheetContent(
         onValueChange = viewModel::setTokenAddress,
         label = { Text("Address") },
         singleLine = true,
-        isError = viewModel.tokenWithValueBeingAdded.value.loadable is Failed,
+        isError = viewModel.tokenWithValueBeingAdded.loadable is Failed,
         modifier = Modifier.fillMaxWidth(),
     )
-    when (val tokenWithValue = viewModel.tokenWithValueBeingAdded.value.loadable) {
+    when (val tokenWithValue = viewModel.tokenWithValueBeingAdded.loadable) {
       is Failed -> {
         when (val error = tokenWithValue.error) {
           is HttpException -> {

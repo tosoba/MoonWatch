@@ -20,7 +20,7 @@ fun ViewTokenBottomSheetContent(
     viewModel: MainViewModel = hiltViewModel()
 ) {
   val tokenWithValue: TokenWithValue =
-      viewModel.tokenWithValueBeingViewed.value ?: throw IllegalArgumentException()
+      viewModel.tokenWithValueBeingViewed ?: throw IllegalArgumentException()
   Column(modifier = Modifier.padding(horizontal = 10.dp)) {
     Box(modifier = Modifier.height(15.dp))
     TokenValueBottomSheetColumnContent(tokenWithValue.token, tokenWithValue.value)

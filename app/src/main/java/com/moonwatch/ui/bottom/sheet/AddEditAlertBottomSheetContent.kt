@@ -35,20 +35,20 @@ fun AddEditAlertBottomSheetContent(
 ) {
   val token =
       when (alertBottomSheetMode) {
-        AlertBottomSheetMode.ADD -> viewModel.tokenWithValueBeingViewed.value?.token
-        AlertBottomSheetMode.EDIT -> viewModel.tokenAlertWithValueBeingViewed.value?.token
+        AlertBottomSheetMode.ADD -> viewModel.tokenWithValueBeingViewed?.token
+        AlertBottomSheetMode.EDIT -> viewModel.tokenAlertWithValueBeingViewed?.token
       }
           ?: throw IllegalStateException()
   val tokenValue =
       when (alertBottomSheetMode) {
-        AlertBottomSheetMode.ADD -> viewModel.tokenWithValueBeingViewed.value?.value
-        AlertBottomSheetMode.EDIT -> viewModel.tokenAlertWithValueBeingViewed.value?.value
+        AlertBottomSheetMode.ADD -> viewModel.tokenWithValueBeingViewed?.value
+        AlertBottomSheetMode.EDIT -> viewModel.tokenAlertWithValueBeingViewed?.value
       }
           ?: throw IllegalStateException()
 
   fun alertBeingViewed(): TokenAlert {
     if (alertBottomSheetMode != AlertBottomSheetMode.EDIT) throw IllegalStateException()
-    return viewModel.tokenAlertWithValueBeingViewed.value?.alert ?: throw IllegalStateException()
+    return viewModel.tokenAlertWithValueBeingViewed?.alert ?: throw IllegalStateException()
   }
 
   val tokenValueScale = 0.coerceAtLeast(tokenValue.usd.stripTrailingZeros().scale())
