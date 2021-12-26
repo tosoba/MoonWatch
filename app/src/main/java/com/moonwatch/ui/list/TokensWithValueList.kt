@@ -53,7 +53,11 @@ fun TokensWithValueList(
   val tokens = viewModel.tokensFlow.collectAsLazyPagingItems()
   if (tokens.itemCount == 0) {
     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-      Text(text = "No saved tokens.", textAlign = TextAlign.Center)
+      Text(
+          text = "No saved tokens.",
+          textAlign = TextAlign.Center,
+          style = Typography.h6.copy(fontWeight = FontWeight.Bold),
+      )
     }
   } else {
     LazyColumn(modifier = Modifier.fillMaxSize()) {

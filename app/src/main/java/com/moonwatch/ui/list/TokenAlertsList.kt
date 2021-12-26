@@ -51,7 +51,11 @@ fun TokenAlertsList(
   val alerts = viewModel.alertsFlow.collectAsLazyPagingItems()
   if (alerts.itemCount == 0) {
     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-      Text(text = "No saved alerts.", textAlign = TextAlign.Center)
+      Text(
+          text = "No saved alerts.",
+          textAlign = TextAlign.Center,
+          style = Typography.h6.copy(fontWeight = FontWeight.Bold),
+      )
     }
   } else {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
