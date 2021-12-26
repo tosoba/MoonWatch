@@ -13,17 +13,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.moonwatch.MainViewModel
-import com.moonwatch.core.android.model.Failed
-import com.moonwatch.core.android.model.LoadingInProgress
-import com.moonwatch.core.android.model.Ready
-import com.moonwatch.exception.InvalidAddressException
+import com.moonwatch.core.exception.InvalidAddressException
+import com.moonwatch.core.model.Failed
+import com.moonwatch.core.model.LoadingInProgress
+import com.moonwatch.core.model.Ready
 import com.moonwatch.ui.RetryLoadingTokenButton
+import java.io.IOException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
-import java.io.IOException
 
 @Composable
 @OptIn(ExperimentalCoroutinesApi::class, ExperimentalMaterialApi::class, FlowPreview::class)

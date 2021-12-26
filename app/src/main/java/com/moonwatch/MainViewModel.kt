@@ -6,10 +6,12 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.moonwatch.core.android.delegate.mutableStateOf
-import com.moonwatch.core.android.model.*
+import com.moonwatch.core.android.model.LoadableParcelable
+import com.moonwatch.core.android.model.parcelize
 import com.moonwatch.core.ext.withLatestFrom
+import com.moonwatch.core.model.Empty
+import com.moonwatch.core.model.Ready
 import com.moonwatch.core.usecase.*
-import com.moonwatch.exception.InvalidAddressException
 import com.moonwatch.model.TokenAlertWithValue
 import com.moonwatch.model.TokenWithValue
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,7 +21,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
@@ -46,46 +47,27 @@ constructor(
   var tokenWithValueBeingViewed: TokenWithValue? by savedStateHandle.mutableStateOf(null)
   var tokenAlertWithValueBeingViewed: TokenAlertWithValue? by savedStateHandle.mutableStateOf(null)
 
-  private val _toggleRetryLoadingToken = MutableSharedFlow<Unit>()
-
   val alertsFlow: Flow<PagingData<TokenAlertWithValue>> =
       getAlertsFlow(pageSize = 20).map { it.map(::TokenAlertWithValue) }.distinctUntilChanged()
 
   val tokensFlow: Flow<PagingData<TokenWithValue>> =
       getTokensFlow(pageSize = 20).map { it.map(::TokenWithValue) }.distinctUntilChanged()
 
+  private val _toggleRetryLoadingToken = MutableSharedFlow<Unit>()
+
+  private val tokenAddressFlow: Flow<String> =
+      merge(
+          tokenAddress.drop(1).debounce(500L).distinctUntilChanged(),
+          _toggleRetryLoadingToken.debounce(500L).withLatestFrom(tokenAddress) { _, address ->
+            address
+          },
+      )
+
   private val tokenWithValueBeingAddedFlow: Flow<LoadableParcelable<TokenWithValue>>
-    get() {
-      val tokenAddressFlow =
-          merge(
-              tokenAddress.drop(1).debounce(500L).distinctUntilChanged(),
-              _toggleRetryLoadingToken.debounce(500L).withLatestFrom(tokenAddress) { _, address ->
-                address
-              },
-          )
-      return tokenAddressFlow
-          .transformLatest { address ->
-            if (address.isEmpty()) {
-              emit(Empty)
-              return@transformLatest
-            }
-
-            if (!isBscAddressValid(address)) {
-              emit(FailedFirst(InvalidAddressException))
-              return@transformLatest
-            }
-
-            emit(LoadingFirst)
-            try {
-              val tokenWithValue = withTimeout(10_000L) { getTokenWithValue(address) }
-              emit(Ready(tokenWithValue))
-            } catch (ex: Exception) {
-              emit(FailedFirst(ex))
-            }
-          }
-          .map { loadable -> loadable.map(::TokenWithValue).parcelize() }
-          .onEach { tokenWithValueBeingAdded = it }
-    }
+    get() =
+        getTokenWithValue(addresses = tokenAddressFlow)
+            .map { loadable -> loadable.map(::TokenWithValue).parcelize() }
+            .onEach(::tokenWithValueBeingAdded::set)
 
   init {
     tokenWithValueBeingAddedFlow.launchIn(viewModelScope)
@@ -103,10 +85,6 @@ constructor(
         value = currentTokenWithValue.value.value,
     )
     clearTokenBeingAddedAddress()
-  }
-
-  fun clearTokenBeingAddedAddress() {
-    _tokenAddress.value = ""
   }
 
   fun deleteToken(address: String) {
@@ -145,5 +123,7 @@ constructor(
     _tokenAddress.value = address
   }
 
-  private fun isBscAddressValid(address: String) = address.matches(Regex("^0x\\S{40}\$"))
+  fun clearTokenBeingAddedAddress() {
+    _tokenAddress.value = ""
+  }
 }
