@@ -80,14 +80,17 @@ constructor(
     _toggleRetryLoadingToken.emit(Unit)
   }
 
-  suspend fun saveCurrentToken() {
-    val currentTokenWithValue = tokenWithValueBeingAdded.loadable
-    if (currentTokenWithValue !is Ready<TokenWithValue>) throw IllegalStateException()
-    saveTokenWithValue(
-        token = currentTokenWithValue.value.token,
-        value = currentTokenWithValue.value.value,
-    )
-    clearTokenBeingAddedAddress()
+  suspend fun saveTokenCurrentlyBeingAdded() {
+    when (val tokenWithValue = tokenWithValueBeingAdded.loadable) {
+      is Ready<TokenWithValue> -> {
+        saveTokenWithValue(
+            token = tokenWithValue.value.token,
+            value = tokenWithValue.value.value,
+        )
+        clearTokenBeingAddedAddress()
+      }
+      else -> throw IllegalStateException()
+    }
   }
 
   fun deleteToken(address: String) {

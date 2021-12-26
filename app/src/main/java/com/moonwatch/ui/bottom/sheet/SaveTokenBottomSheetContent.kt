@@ -117,7 +117,7 @@ fun SaveTokenBottomSheetContent(
           OutlinedButton(
               onClick = {
                 scope.launch {
-                  viewModel.saveCurrentToken()
+                  viewModel.saveTokenCurrentlyBeingAdded()
                   modalBottomSheetState.hide()
                 }
               },
