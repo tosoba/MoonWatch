@@ -20,8 +20,19 @@ interface AlertDao {
   @Query("SELECT * FROM token_alert ORDER BY last_fired_at DESC")
   fun selectTokenAlertsOrderedByLastFiredAt(): Flow<TokenAlertEntity>
 
-  @Query("SELECT * FROM token_alert WHERE active = 1")
-  suspend fun selectActiveTokenAlerts(): List<TokenAlertEntity>
+  @Query(
+      """SELECT a.*, 
+    t.address AS token_address, t.name AS token_name, 
+    t.symbol AS token_symbol, t.chain AS token_chain,
+    v.address AS value_address, v.usd AS value_usd,
+    v.bnb AS value_bnb, v.eth AS value_eth,
+    v.updated_at AS value_updated_at, v.id AS value_id
+    FROM token_alert a 
+    INNER JOIN token AS t ON a.address = t.address 
+    INNER JOIN token_value v ON v.address = t.address 
+    WHERE a.active = 1 AND v.id = (SELECT MAX(id) FROM token_value WHERE address = t.address) 
+    ORDER BY a.created_at DESC""")
+  suspend fun selectActiveTokenAlerts(): List<TokenAlertWithLatestValue>
 
   @Query("UPDATE token_alert SET last_fired_at = :timestamp WHERE id IN (:ids)")
   suspend fun updateLastFiredAtForAlerts(ids: List<Long>, timestamp: LocalDateTime)
@@ -40,7 +51,7 @@ interface AlertDao {
     INNER JOIN token AS t ON a.address = t.address 
     INNER JOIN token_value v ON v.address = t.address 
     WHERE v.id = (SELECT MAX(id) FROM token_value WHERE address = t.address) 
-    ORDER BY v.usd DESC""")
+    ORDER BY a.created_at DESC""")
   fun selectTokenAlertsWithLatestValueOrderedByCreatedAt():
       PagingSource<Int, TokenAlertWithLatestValue>
 

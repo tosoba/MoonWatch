@@ -7,10 +7,11 @@ import androidx.work.WorkerParameters
 import com.moonwatch.api.pancakeswap.PancakeswapEndpoints
 import com.moonwatch.core.android.ext.millisToLocalDateTime
 import com.moonwatch.core.model.Chain
+import com.moonwatch.core.model.ITokenAlertWithValue
 import com.moonwatch.db.dao.AlertDao
 import com.moonwatch.db.dao.TokenDao
-import com.moonwatch.db.entity.TokenAlertEntity
 import com.moonwatch.db.entity.TokenValueEntity
+import com.moonwatch.repo.notification.AlertNotificationManager
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.util.*
@@ -26,7 +27,8 @@ constructor(
     @Assisted params: WorkerParameters,
     private val alertDao: AlertDao,
     private val tokenDao: TokenDao,
-    private val pancakeswapEndpoints: PancakeswapEndpoints
+    private val pancakeswapEndpoints: PancakeswapEndpoints,
+    private val alertNotificationManager: AlertNotificationManager,
 ) : CoroutineWorker(ctx, params) {
   override suspend fun doWork(): Result {
     val bscTokens = tokenDao.selectTokensByChain(Chain.BSC)
@@ -54,31 +56,33 @@ constructor(
       return Result.failure()
     }
 
-    val groupedAlerts = alertDao.selectActiveTokenAlerts().groupBy(TokenAlertEntity::address)
+    val groupedAlerts = alertDao.selectActiveTokenAlerts().groupBy { it.token.address }
     if (groupedAlerts.isEmpty()) return Result.success()
 
     val alertIdsToFire = mutableListOf<Long>()
-    val alertsToFire = mutableListOf<TokenAlertEntity>()
+    val sellAlertsToFire = mutableListOf<ITokenAlertWithValue>()
+    val buyAlertsToFire = mutableListOf<ITokenAlertWithValue>()
+
     updatedValues.forEach { (address, value) ->
       val alerts = groupedAlerts[address] ?: return@forEach
       alerts
-          .filter { alert -> alert.sellPriceTargetUsd?.let { it > value.usd } ?: false }
-          .maxByOrNull { it.sellPriceTargetUsd!! }
+          .filter { (alert) -> alert.sellPriceTargetUsd?.let { it > value.usd } ?: false }
+          .maxByOrNull { (alert) -> alert.sellPriceTargetUsd!! }
           ?.let {
-            alertIdsToFire.add(it.id)
-            alertsToFire.add(it)
+            alertIdsToFire.add(it.alert.id)
+            sellAlertsToFire.add(it)
           }
       alerts
-          .filter { alert -> alert.buyPriceTargetUsd?.let { it < value.usd } ?: false }
-          .minByOrNull { it.buyPriceTargetUsd!! }
+          .filter { (alert) -> alert.buyPriceTargetUsd?.let { it < value.usd } ?: false }
+          .minByOrNull { (alert) -> alert.buyPriceTargetUsd!! }
           ?.let {
-            alertIdsToFire.add(it.id)
-            alertsToFire.add(it)
+            alertIdsToFire.add(it.alert.id)
+            buyAlertsToFire.add(it)
           }
     }
 
     if (alertIdsToFire.isNotEmpty()) {
-      // TODO: create notifications (wake up device)
+      alertNotificationManager.show(sellAlerts = sellAlertsToFire, buyAlerts = buyAlertsToFire)
       alertDao.updateLastFiredAtForAlerts(alertIdsToFire, LocalDateTime.now())
     }
 

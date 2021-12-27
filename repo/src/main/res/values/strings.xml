@@ -1,0 +1,4 @@
+<resources>
+    <string name="alert_channel_name">Alert Channel</string>
+    <string name="alert_channel_description">Token price alert notifications channel</string>
+</resources>
