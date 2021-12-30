@@ -81,7 +81,7 @@ fun TokensWithValueList(
 
   if (tokensLoadingState.value) {
     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-      CircularProgressIndicator() // TODO: shimmer?
+      CircularProgressIndicator()
     }
   } else {
     LazyColumn(modifier = Modifier.fillMaxSize()) {

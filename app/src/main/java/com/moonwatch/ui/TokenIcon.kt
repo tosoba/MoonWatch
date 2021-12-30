@@ -25,7 +25,6 @@ import com.moonwatch.ui.theme.Typography
 @Composable
 @OptIn(ExperimentalCoilApi::class)
 fun TokenIcon(token: Token) {
-  // TODO: fix coil
   val painter =
       rememberImagePainter("https://r.poocoin.app/smartchain/assets/${token.address}/logo.png")
   val state = painter.state

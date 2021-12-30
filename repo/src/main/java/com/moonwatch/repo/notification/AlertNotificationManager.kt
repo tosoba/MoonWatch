@@ -92,15 +92,14 @@ constructor(
 
     fun createChannel(context: Context) {
       if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-      val name = context.getString(R.string.alert_channel_name)
-      val descriptionText = context.getString(R.string.alert_channel_description)
-      val importance = NotificationManager.IMPORTANCE_DEFAULT
       context
           .getSystemService(NotificationManager::class.java)
           .createNotificationChannel(
-              NotificationChannel(CHANNEL_ID, name, importance).apply {
-                description = descriptionText
-              },
+              NotificationChannel(
+                      CHANNEL_ID,
+                      context.getString(R.string.alert_channel_name),
+                      NotificationManager.IMPORTANCE_DEFAULT)
+                  .apply { description = context.getString(R.string.alert_channel_description) },
           )
     }
   }
