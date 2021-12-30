@@ -25,8 +25,6 @@ constructor(
 ) {
   fun show(sellAlerts: List<ITokenAlertWithValue>, buyAlerts: List<ITokenAlertWithValue>) {
     val alertsCount = sellAlerts.size + buyAlerts.size
-    val groupTitle =
-        if (alertsCount == 1) "A price target was hit." else "$alertsCount price targets were hit."
     val sellNotifications =
         sellAlerts
             .map { it.alert.id to buildNotificationFor(it, ::sellNotificationTitleFor) }
@@ -42,7 +40,20 @@ constructor(
       }
 
       if (alertsCount > 1) {
-        // TODO: show summary notification using group title
+        val summaryNotification =
+            NotificationCompat.Builder(context, CHANNEL_ID)
+                .setContentTitle("$alertsCount price targets were hit.")
+                .setContentText(
+                    "Sell targets hit: ${sellAlerts.size}. Buy targets hit: ${buyAlerts.size}.")
+                .setStyle(
+                    NotificationCompat.InboxStyle()
+                        .setBigContentTitle("$alertsCount price targets were hit.")
+                        .setSummaryText(
+                            "Sell targets hit: ${sellAlerts.size}. Buy targets hit: ${buyAlerts.size}."))
+                .setGroup(GROUP_KEY)
+                .setGroupSummary(true)
+                .build()
+        notify(SUMMARY_NOTIFICATION_ID, summaryNotification)
       }
     }
   }
@@ -60,6 +71,7 @@ constructor(
           .setPriority(NotificationCompat.PRIORITY_DEFAULT)
           .setContentIntent(PendingIntent.getActivity(context, 0, intent, 0))
           .setAutoCancel(true)
+          .setGroup(GROUP_KEY)
           .build()
 
   private fun sellNotificationTitleFor(tokenAlertWithValue: ITokenAlertWithValue): String =
@@ -75,6 +87,8 @@ constructor(
 
   companion object {
     private const val CHANNEL_ID = "ALERT_NOTIFICATIONS"
+    private const val GROUP_KEY = "ALERT_NOTIFICATIONS"
+    private const val SUMMARY_NOTIFICATION_ID = 0
 
     fun createChannel(context: Context) {
       if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
