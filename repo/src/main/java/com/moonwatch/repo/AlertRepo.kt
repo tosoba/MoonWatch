@@ -26,12 +26,14 @@ class AlertRepo @Inject constructor(private val dao: AlertDao) : IAlertRepo {
 
   override suspend fun addAlert(
       address: String,
+      createdValueId: Long,
       sellPriceTargetUsd: BigDecimal?,
       buyPriceTargetUsd: BigDecimal?
   ) {
     dao.insertAlert(
         TokenAlertEntity(
             address = address,
+            createdValueId = createdValueId,
             active = true,
             createdAt = LocalDateTime.now(),
             sellPriceTargetUsd = sellPriceTargetUsd,

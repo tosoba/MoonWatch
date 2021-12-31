@@ -15,6 +15,12 @@ import org.threeten.bp.LocalDateTime
                 childColumns = ["address"],
                 onDelete = ForeignKey.CASCADE,
             ),
+            ForeignKey(
+                entity = TokenValueEntity::class,
+                parentColumns = ["id"],
+                childColumns = ["created_value_id"],
+                onDelete = ForeignKey.RESTRICT,
+            ),
         ],
     indices =
         [
@@ -26,6 +32,7 @@ import org.threeten.bp.LocalDateTime
 data class TokenAlertEntity(
     override val address: String,
     override val active: Boolean,
+    @ColumnInfo(name = "created_value_id") val createdValueId: Long,
     @ColumnInfo(name = "created_at") override val createdAt: LocalDateTime,
     @ColumnInfo(name = "last_fired_at") override val lastFiredAt: LocalDateTime? = null,
     @ColumnInfo(name = "sell_price_target_usd") override val sellPriceTargetUsd: BigDecimal? = null,

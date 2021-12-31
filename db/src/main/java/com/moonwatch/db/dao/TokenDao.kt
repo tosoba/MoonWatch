@@ -25,8 +25,11 @@ interface TokenDao {
   @Query("SELECT * FROM token WHERE chain = :chain")
   suspend fun selectTokensByChain(chain: Chain): List<TokenEntity>
 
-  @Query("DELETE FROM token_value WHERE updated_at < :timestamp")
-  suspend fun deleteTokenValuesOlderThen(timestamp: LocalDateTime)
+  @Query(
+      """DELETE FROM token_value 
+        WHERE token_value.updated_at < :timestamp 
+        AND NOT EXISTS (SELECT a.id FROM token_alert a WHERE a.created_value_id = token_value.id)""")
+  suspend fun deleteTokenValuesUnassociatedWithAlertsOlderThan(timestamp: LocalDateTime)
 
   @Query(
       """SELECT t.*, 

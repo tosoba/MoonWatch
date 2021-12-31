@@ -10,6 +10,7 @@ interface IAlertRepo {
 
   suspend fun addAlert(
       address: String,
+      createdValueId: Long,
       sellPriceTargetUsd: BigDecimal?,
       buyPriceTargetUsd: BigDecimal?
   )

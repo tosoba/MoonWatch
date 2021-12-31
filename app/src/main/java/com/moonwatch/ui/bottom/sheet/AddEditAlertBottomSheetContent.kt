@@ -237,6 +237,7 @@ fun AddEditAlertBottomSheetContent(
               AlertBottomSheetMode.ADD -> {
                 viewModel.addAlert(
                     address = token.address,
+                    createdValueId = tokenValue.id,
                     sellPriceTargetUsd = sellTarget.toBigDecimalOrNull(),
                     buyPriceTargetUsd = buyTarget.toBigDecimalOrNull(),
                 )

@@ -27,4 +27,6 @@ data class PancakeswapTokenResponse(
 
   override val value: ITokenValue
     get() = this
+
+  override val id: Long = -1
 }

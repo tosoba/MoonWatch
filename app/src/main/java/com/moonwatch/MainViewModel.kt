@@ -97,10 +97,16 @@ constructor(
     viewModelScope.launch { deleteToken.invoke(address) }
   }
 
-  fun addAlert(address: String, sellPriceTargetUsd: BigDecimal?, buyPriceTargetUsd: BigDecimal?) {
+  fun addAlert(
+      address: String,
+      createdValueId: Long,
+      sellPriceTargetUsd: BigDecimal?,
+      buyPriceTargetUsd: BigDecimal?
+  ) {
     viewModelScope.launch {
       addAlert.invoke(
           address,
+          createdValueId,
           sellPriceTargetUsd = sellPriceTargetUsd,
           buyPriceTargetUsd = buyPriceTargetUsd,
       )

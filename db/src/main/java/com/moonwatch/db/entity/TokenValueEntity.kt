@@ -29,7 +29,7 @@ data class TokenValueEntity(
     val eth: BigDecimal? = null,
     @ColumnInfo(name = "updated_at") override val updatedAt: LocalDateTime
 ) : ITokenValue {
-  @PrimaryKey(autoGenerate = true) var id: Long = 0
+  @PrimaryKey(autoGenerate = true) override var id: Long = 0
 
   constructor(
       other: ITokenValue

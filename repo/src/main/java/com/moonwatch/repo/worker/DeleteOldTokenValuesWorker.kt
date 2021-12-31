@@ -18,7 +18,9 @@ constructor(
     private val tokenDao: TokenDao
 ) : CoroutineWorker(ctx, params) {
   override suspend fun doWork(): Result {
-    tokenDao.deleteTokenValuesOlderThen(timestamp = LocalDateTime.now().minusDays(7))
+    tokenDao.deleteTokenValuesUnassociatedWithAlertsOlderThan(
+        timestamp = LocalDateTime.now().minusDays(7),
+    )
     return Result.success()
   }
 }
