@@ -55,6 +55,7 @@ constructor(
                             "Sell targets hit: ${sellAlerts.size}. Buy targets hit: ${buyAlerts.size}."))
                 .setGroup(GROUP_KEY)
                 .setGroupSummary(true)
+                .setSmallIcon(android.R.drawable.ic_dialog_alert)
                 .build()
         notify(SUMMARY_NOTIFICATION_ID, summaryNotification)
       }
@@ -73,6 +74,7 @@ constructor(
           // percentage (in sub text)
           .setPriority(NotificationCompat.PRIORITY_DEFAULT)
           .setContentIntent(PendingIntent.getActivity(context, 0, intent, 0))
+          .setSmallIcon(android.R.drawable.ic_dialog_alert)
           .setAutoCancel(true)
           .setGroup(GROUP_KEY)
           .build()
