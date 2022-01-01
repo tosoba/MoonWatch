@@ -19,8 +19,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
 import coil.annotation.ExperimentalCoilApi
+import com.github.marlonlom.utilities.timeago.TimeAgo
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.moonwatch.MainViewModel
+import com.moonwatch.core.android.ext.toEpochMillisDefault
 import com.moonwatch.model.TokenAlertWithValue
 import com.moonwatch.ui.TokenIcon
 import com.moonwatch.ui.dialog.DeleteItemDialog
@@ -84,13 +86,14 @@ private fun TokenAlertWithValueListItem(
     onDeleteClick: (TokenAlertWithValue) -> Unit,
     viewModel: MainViewModel = hiltViewModel()
 ) {
+  val (token, alert, value) = tokenAlertWithValue
   ListItem(
-      icon = { TokenIcon(tokenAlertWithValue.token) },
+      icon = { TokenIcon(token) },
       secondaryText = {
         Row(horizontalArrangement = Arrangement.Start) {
           Text(text = "$", style = Typography.subtitle2)
           Text(
-              text = tokenAlertWithValue.value.usd.toPlainString(),
+              text = value.usd.toPlainString(),
               style = Typography.subtitle2,
               maxLines = 1,
               modifier = Modifier.weight(1f),
@@ -103,10 +106,21 @@ private fun TokenAlertWithValueListItem(
             Icon(Icons.Outlined.Delete, "")
           }
           Switch(
-              checked = tokenAlertWithValue.alert.active,
-              onCheckedChange = { viewModel.toggleAlertActive(tokenAlertWithValue.alert.id) },
+              checked = alert.active,
+              onCheckedChange = { viewModel.toggleAlertActive(alert.id) },
           )
         }
+      },
+      overlineText = {
+        Text(
+            text =
+                if (alert.lastFiredAt != null) {
+                  "Last fired ${TimeAgo.using(alert.lastFiredAt.toEpochMillisDefault)}"
+                } else {
+                  "Created ${TimeAgo.using(alert.createdAt.toEpochMillisDefault)}"
+                },
+            modifier = Modifier.fillMaxWidth(),
+        )
       },
       modifier = Modifier.fillMaxWidth().clickable { onItemClick(tokenAlertWithValue) },
   ) {
