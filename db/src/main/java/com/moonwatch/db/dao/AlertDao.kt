@@ -56,7 +56,7 @@ interface AlertDao {
     INNER JOIN token_value cuv ON cuv.address = t.address 
     INNER JOIN token_value crv ON crv.id = a.creation_value_id
     WHERE cuv.id = (SELECT MAX(id) FROM token_value WHERE address = t.address) 
-    ORDER BY a.created_at DESC""")
+    ORDER BY a.last_fired_at, a.created_at DESC""")
   fun selectTokenAlertsWithValuesOrderedByCreatedAt(): PagingSource<Int, TokenAlertWithValues>
 
   @Query("DELETE FROM token_alert WHERE id = :id") suspend fun deleteAlertById(id: Long)
