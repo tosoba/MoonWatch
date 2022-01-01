@@ -1,7 +1,7 @@
 package com.moonwatch.core.model
 
-interface ITokenAlertWithValue {
+interface ITokenAlertWithCurrentValue {
   val token: IToken
   val alert: ITokenAlert
-  val value: ITokenValue
+  val currentValue: ITokenValue
 }

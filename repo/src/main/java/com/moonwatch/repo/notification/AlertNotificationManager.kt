@@ -10,7 +10,7 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.moonwatch.core.di.MainActivityIntent
-import com.moonwatch.core.model.ITokenAlertWithValue
+import com.moonwatch.core.model.ITokenAlertWithCurrentValue
 import com.moonwatch.repo.R
 import dagger.Reusable
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -23,7 +23,10 @@ constructor(
     @ApplicationContext private val context: Context,
     @MainActivityIntent private val intent: Intent
 ) {
-  fun show(sellAlerts: List<ITokenAlertWithValue>, buyAlerts: List<ITokenAlertWithValue>) {
+  fun show(
+      sellAlerts: List<ITokenAlertWithCurrentValue>,
+      buyAlerts: List<ITokenAlertWithCurrentValue>
+  ) {
     val alertsCount = sellAlerts.size + buyAlerts.size
     val sellNotifications =
         sellAlerts
@@ -59,9 +62,9 @@ constructor(
   }
 
   private fun buildNotificationFor(
-      tokenAlertWithValue: ITokenAlertWithValue,
-      notificationTitle: (ITokenAlertWithValue) -> String,
-      notificationContent: (ITokenAlertWithValue) -> String = ::notificationContentFor,
+      tokenAlertWithValue: ITokenAlertWithCurrentValue,
+      notificationTitle: (ITokenAlertWithCurrentValue) -> String,
+      notificationContent: (ITokenAlertWithCurrentValue) -> String = ::notificationContentFor,
   ): Notification =
       NotificationCompat.Builder(context, CHANNEL_ID)
           .setContentTitle(notificationTitle(tokenAlertWithValue))
@@ -74,14 +77,14 @@ constructor(
           .setGroup(GROUP_KEY)
           .build()
 
-  private fun sellNotificationTitleFor(tokenAlertWithValue: ITokenAlertWithValue): String =
+  private fun sellNotificationTitleFor(tokenAlertWithValue: ITokenAlertWithCurrentValue): String =
       "${tokenAlertWithValue.token.name} sell price target was hit!"
 
-  private fun buyNotificationTitleFor(tokenAlertWithValue: ITokenAlertWithValue): String =
+  private fun buyNotificationTitleFor(tokenAlertWithValue: ITokenAlertWithCurrentValue): String =
       "${tokenAlertWithValue.token.name} buy price target was hit!"
 
-  private fun notificationContentFor(tokenAlertWithValue: ITokenAlertWithValue): String {
-    val currentPrice = tokenAlertWithValue.value.usd.stripTrailingZeros()
+  private fun notificationContentFor(tokenAlertWithValue: ITokenAlertWithCurrentValue): String {
+    val currentPrice = tokenAlertWithValue.currentValue.usd.stripTrailingZeros()
     return "Current price: ${currentPrice.toPlainString()}"
   }
 

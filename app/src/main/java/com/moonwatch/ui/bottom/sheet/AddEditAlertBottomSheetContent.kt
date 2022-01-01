@@ -39,10 +39,16 @@ fun AddEditAlertBottomSheetContent(
         AlertBottomSheetMode.EDIT -> viewModel.tokenAlertWithValueBeingViewed?.token
       }
           ?: throw IllegalStateException()
-  val tokenValue =
+  val currentTokenValue =
       when (alertBottomSheetMode) {
         AlertBottomSheetMode.ADD -> viewModel.tokenWithValueBeingViewed?.value
-        AlertBottomSheetMode.EDIT -> viewModel.tokenAlertWithValueBeingViewed?.value
+        AlertBottomSheetMode.EDIT -> viewModel.tokenAlertWithValueBeingViewed?.currentValue
+      }
+          ?: throw IllegalStateException()
+  val tokenValueForCalculations =
+      when (alertBottomSheetMode) {
+        AlertBottomSheetMode.ADD -> viewModel.tokenWithValueBeingViewed?.value
+        AlertBottomSheetMode.EDIT -> viewModel.tokenAlertWithValueBeingViewed?.creationValue
       }
           ?: throw IllegalStateException()
 
@@ -51,7 +57,7 @@ fun AddEditAlertBottomSheetContent(
     return viewModel.tokenAlertWithValueBeingViewed?.alert ?: throw IllegalStateException()
   }
 
-  val tokenValueScale = 0.coerceAtLeast(tokenValue.usd.stripTrailingZeros().scale())
+  val tokenValueScale = 0.coerceAtLeast(currentTokenValue.usd.stripTrailingZeros().scale())
 
   fun BigDecimal.toStringInTokenValueScale(): String =
       stripTrailingZeros().setScale(tokenValueScale, RoundingMode.HALF_UP).toPlainString()
@@ -80,7 +86,8 @@ fun AddEditAlertBottomSheetContent(
   fun isTargetValid(target: String): Boolean = target.toBigDecimalOrNull() != null
   fun isTargetValidOrEmpty(target: String): Boolean = target.isEmpty() || isTargetValid(target)
   fun targetX(target: String): BigDecimal =
-      if (isTargetValid(target)) target.toBigDecimal() / tokenValue.usd else BigDecimal.ONE
+      if (isTargetValid(target)) target.toBigDecimal() / tokenValueForCalculations.usd
+      else BigDecimal.ONE
 
   var sellTargetX by rememberSaveable { mutableStateOf(targetX(sellTarget)) }
   var buyTargetX by rememberSaveable { mutableStateOf(targetX(buyTarget)) }
@@ -107,7 +114,14 @@ fun AddEditAlertBottomSheetContent(
               AlertBottomSheetMode.EDIT -> "Edit alert"
             },
     )
-    TokenValueBottomSheetColumnContent(token, tokenValue)
+    TokenValueBottomSheetColumnContent(token, currentTokenValue)
+    if (alertBottomSheetMode == AlertBottomSheetMode.EDIT) {
+      ViewTokenBottomSheetTextField(
+          value = tokenValueForCalculations.usd.toPlainString(),
+          label = "Alert creation value in USD",
+          toastText = "Copied token value",
+      )
+    }
 
     OutlinedTextField(
         value = buyTarget,
@@ -139,7 +153,7 @@ fun AddEditAlertBottomSheetContent(
           enabled = buyTargetX > BigDecimal(0.1) && isTargetValidOrEmpty(buyTarget),
           onClick = {
             buyTargetX -= BigDecimal(0.1)
-            buyTarget = (tokenValue.usd * buyTargetX).toStringInTokenValueScale()
+            buyTarget = (tokenValueForCalculations.usd * buyTargetX).toStringInTokenValueScale()
           },
           modifier = Modifier.weight(1f),
       ) { Text("-0.1X") }
@@ -147,7 +161,7 @@ fun AddEditAlertBottomSheetContent(
           enabled = buyTargetX < BigDecimal.ONE && isTargetValidOrEmpty(buyTarget),
           onClick = {
             buyTargetX += BigDecimal(0.1)
-            buyTarget = (tokenValue.usd * buyTargetX).toStringInTokenValueScale()
+            buyTarget = (tokenValueForCalculations.usd * buyTargetX).toStringInTokenValueScale()
           },
           modifier = Modifier.weight(1f),
       ) { Text("+0.1X") }
@@ -184,7 +198,7 @@ fun AddEditAlertBottomSheetContent(
           enabled = sellTargetX > BigDecimal(2.0) && isTargetValid(sellTarget),
           onClick = {
             sellTargetX -= BigDecimal.ONE
-            sellTarget = (tokenValue.usd * sellTargetX).toStringInTokenValueScale()
+            sellTarget = (tokenValueForCalculations.usd * sellTargetX).toStringInTokenValueScale()
           },
           modifier = Modifier.weight(1f),
       ) { Text("-1X") }
@@ -192,7 +206,7 @@ fun AddEditAlertBottomSheetContent(
           enabled = sellTargetX > BigDecimal.ONE && isTargetValidOrEmpty(sellTarget),
           onClick = {
             sellTargetX -= BigDecimal(0.1)
-            sellTarget = (tokenValue.usd * sellTargetX).toStringInTokenValueScale()
+            sellTarget = (tokenValueForCalculations.usd * sellTargetX).toStringInTokenValueScale()
           },
           modifier = Modifier.weight(1f),
       ) { Text("-0.1X") }
@@ -200,7 +214,7 @@ fun AddEditAlertBottomSheetContent(
           enabled = isTargetValidOrEmpty(sellTarget),
           onClick = {
             sellTargetX += BigDecimal(0.1)
-            sellTarget = (tokenValue.usd * sellTargetX).toStringInTokenValueScale()
+            sellTarget = (tokenValueForCalculations.usd * sellTargetX).toStringInTokenValueScale()
           },
           modifier = Modifier.weight(1f),
       ) { Text("+0.1X") }
@@ -208,7 +222,7 @@ fun AddEditAlertBottomSheetContent(
           enabled = isTargetValidOrEmpty(sellTarget),
           onClick = {
             sellTargetX += BigDecimal.ONE
-            sellTarget = (tokenValue.usd * sellTargetX).toStringInTokenValueScale()
+            sellTarget = (tokenValueForCalculations.usd * sellTargetX).toStringInTokenValueScale()
           },
           modifier = Modifier.weight(1f),
       ) { Text("+1X") }
@@ -222,11 +236,11 @@ fun AddEditAlertBottomSheetContent(
           if (buyTarget.isBlank() && sellTarget.isBlank()) {
             validationMessages.add("You must specify either a buy or a sell price target.")
           } else {
-            if (isTargetValid(buyTarget) && buyTarget.toBigDecimal() >= tokenValue.usd) {
+            if (isTargetValid(buyTarget) && buyTarget.toBigDecimal() >= currentTokenValue.usd) {
               validationMessages.add(
                   "Chosen buy price target is larger or equal to current token price.")
             }
-            if (isTargetValid(sellTarget) && sellTarget.toBigDecimal() <= tokenValue.usd) {
+            if (isTargetValid(sellTarget) && sellTarget.toBigDecimal() <= currentTokenValue.usd) {
               validationMessages.add(
                   "Chosen sell price target is less or equal to current token price.")
             }
@@ -237,7 +251,7 @@ fun AddEditAlertBottomSheetContent(
               AlertBottomSheetMode.ADD -> {
                 viewModel.addAlert(
                     address = token.address,
-                    createdValueId = tokenValue.id,
+                    creationValueId = currentTokenValue.id,
                     sellPriceTargetUsd = sellTarget.toBigDecimalOrNull(),
                     buyPriceTargetUsd = buyTarget.toBigDecimalOrNull(),
                 )

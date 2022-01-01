@@ -4,7 +4,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
-import com.moonwatch.core.model.ITokenAlertWithValue
+import com.moonwatch.core.model.ITokenAlertWithValues
 import com.moonwatch.core.repo.IAlertRepo
 import com.moonwatch.db.dao.AlertDao
 import com.moonwatch.db.entity.TokenAlertEntity
@@ -17,23 +17,24 @@ import org.threeten.bp.LocalDateTime
 
 @Reusable
 class AlertRepo @Inject constructor(private val dao: AlertDao) : IAlertRepo {
-  override fun getTokenAlertsWithValue(pageSize: Int): Flow<PagingData<ITokenAlertWithValue>> =
-      Pager(PagingConfig(pageSize = pageSize)) {
-        dao.selectTokenAlertsWithLatestValueOrderedByCreatedAt()
-      }
-          .flow
-          .map { pagingData -> pagingData.map { it } }
+  override fun getTokenAlertsWithValues(pageSize: Int): Flow<PagingData<ITokenAlertWithValues>> {
+    val pager =
+        Pager(PagingConfig(pageSize = pageSize)) {
+          dao.selectTokenAlertsWithValuesOrderedByCreatedAt()
+        }
+    return pager.flow.map { pagingData -> pagingData.map { it } }
+  }
 
   override suspend fun addAlert(
       address: String,
-      createdValueId: Long,
+      creationValueId: Long,
       sellPriceTargetUsd: BigDecimal?,
       buyPriceTargetUsd: BigDecimal?
   ) {
     dao.insertAlert(
         TokenAlertEntity(
             address = address,
-            createdValueId = createdValueId,
+            creationValueId = creationValueId,
             active = true,
             createdAt = LocalDateTime.now(),
             sellPriceTargetUsd = sellPriceTargetUsd,

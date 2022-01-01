@@ -18,7 +18,7 @@ fun TokenValueBottomSheetColumnContent(token: Token, value: TokenValue) {
   )
   ViewTokenBottomSheetTextField(
       value = value.usd.toPlainString(),
-      label = "Value in USD",
+      label = "Current value in USD",
       toastText = "Copied token value",
   )
 }

@@ -1,9 +1,6 @@
 package com.moonwatch
 
 import android.app.Application
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.os.Build
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.*
 import com.jakewharton.threetenabp.AndroidThreeTen

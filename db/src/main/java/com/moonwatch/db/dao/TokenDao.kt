@@ -5,7 +5,7 @@ import androidx.room.*
 import com.moonwatch.core.model.Chain
 import com.moonwatch.db.entity.TokenEntity
 import com.moonwatch.db.entity.TokenValueEntity
-import com.moonwatch.db.result.TokenWithLatestValue
+import com.moonwatch.db.result.TokenWithValue
 import org.threeten.bp.LocalDateTime
 
 @Dao
@@ -28,7 +28,7 @@ interface TokenDao {
   @Query(
       """DELETE FROM token_value 
         WHERE token_value.updated_at < :timestamp 
-        AND NOT EXISTS (SELECT a.id FROM token_alert a WHERE a.created_value_id = token_value.id)""")
+        AND NOT EXISTS (SELECT a.id FROM token_alert a WHERE a.creation_value_id = token_value.id)""")
   suspend fun deleteTokenValuesUnassociatedWithAlertsOlderThan(timestamp: LocalDateTime)
 
   @Query(
@@ -40,7 +40,7 @@ interface TokenDao {
     INNER JOIN token_value v ON v.address = t.address 
     WHERE v.id = (SELECT MAX(id) FROM token_value WHERE address = t.address) 
     ORDER BY v.usd DESC""")
-  fun selectTokensWithLatestValueOrderedByUsdDesc(): PagingSource<Int, TokenWithLatestValue>
+  fun selectTokensWithLatestValueOrderedByUsdDesc(): PagingSource<Int, TokenWithValue>
 
   @Query("DELETE FROM token WHERE address = :address")
   suspend fun deleteTokenByAddress(address: String)

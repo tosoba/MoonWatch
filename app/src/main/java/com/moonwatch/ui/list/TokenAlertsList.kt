@@ -23,7 +23,7 @@ import com.github.marlonlom.utilities.timeago.TimeAgo
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.moonwatch.MainViewModel
 import com.moonwatch.core.android.ext.toEpochMillisDefault
-import com.moonwatch.model.TokenAlertWithValue
+import com.moonwatch.model.TokenAlertWithValues
 import com.moonwatch.ui.TokenIcon
 import com.moonwatch.ui.dialog.DeleteItemDialog
 import com.moonwatch.ui.theme.Typography
@@ -38,10 +38,10 @@ import kotlinx.coroutines.FlowPreview
     FlowPreview::class,
 )
 fun TokenAlertsList(
-    onItemClick: (TokenAlertWithValue) -> Unit,
+    onItemClick: (TokenAlertWithValues) -> Unit,
     viewModel: MainViewModel = hiltViewModel()
 ) {
-  var tokenAlertBeingDeleted by rememberSaveable { mutableStateOf<TokenAlertWithValue?>(null) }
+  var tokenAlertBeingDeleted by rememberSaveable { mutableStateOf<TokenAlertWithValues?>(null) }
   tokenAlertBeingDeleted?.let { tokenAlertWithValue ->
     DeleteItemDialog(
         itemName = "${tokenAlertWithValue.token.name} alert",
@@ -81,9 +81,9 @@ fun TokenAlertsList(
     FlowPreview::class,
 )
 private fun TokenAlertWithValueListItem(
-    tokenAlertWithValue: TokenAlertWithValue,
-    onItemClick: (TokenAlertWithValue) -> Unit,
-    onDeleteClick: (TokenAlertWithValue) -> Unit,
+    tokenAlertWithValue: TokenAlertWithValues,
+    onItemClick: (TokenAlertWithValues) -> Unit,
+    onDeleteClick: (TokenAlertWithValues) -> Unit,
     viewModel: MainViewModel = hiltViewModel()
 ) {
   val (token, alert, value) = tokenAlertWithValue

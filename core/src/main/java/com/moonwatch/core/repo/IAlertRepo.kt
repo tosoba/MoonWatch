@@ -1,16 +1,16 @@
 package com.moonwatch.core.repo
 
 import androidx.paging.PagingData
-import com.moonwatch.core.model.ITokenAlertWithValue
+import com.moonwatch.core.model.ITokenAlertWithValues
 import java.math.BigDecimal
 import kotlinx.coroutines.flow.Flow
 
 interface IAlertRepo {
-  fun getTokenAlertsWithValue(pageSize: Int): Flow<PagingData<ITokenAlertWithValue>>
+  fun getTokenAlertsWithValues(pageSize: Int): Flow<PagingData<ITokenAlertWithValues>>
 
   suspend fun addAlert(
       address: String,
-      createdValueId: Long,
+      creationValueId: Long,
       sellPriceTargetUsd: BigDecimal?,
       buyPriceTargetUsd: BigDecimal?
   )

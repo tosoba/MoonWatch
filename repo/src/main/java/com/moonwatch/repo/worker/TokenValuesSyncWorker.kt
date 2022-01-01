@@ -7,7 +7,7 @@ import androidx.work.WorkerParameters
 import com.moonwatch.api.pancakeswap.PancakeswapEndpoints
 import com.moonwatch.core.android.ext.millisToLocalDateTime
 import com.moonwatch.core.model.Chain
-import com.moonwatch.core.model.ITokenAlertWithValue
+import com.moonwatch.core.model.ITokenAlertWithCurrentValue
 import com.moonwatch.db.dao.AlertDao
 import com.moonwatch.db.dao.TokenDao
 import com.moonwatch.db.entity.TokenValueEntity
@@ -60,8 +60,8 @@ constructor(
     if (groupedAlerts.isEmpty()) return Result.success()
 
     val alertIdsToFire = mutableListOf<Long>()
-    val sellAlertsToFire = mutableListOf<ITokenAlertWithValue>()
-    val buyAlertsToFire = mutableListOf<ITokenAlertWithValue>()
+    val sellAlertsToFire = mutableListOf<ITokenAlertWithCurrentValue>()
+    val buyAlertsToFire = mutableListOf<ITokenAlertWithCurrentValue>()
 
     updatedValues.forEach { (address, value) ->
       val alerts = groupedAlerts[address] ?: return@forEach

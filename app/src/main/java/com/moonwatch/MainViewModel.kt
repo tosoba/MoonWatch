@@ -11,7 +11,7 @@ import com.moonwatch.core.android.model.parcelize
 import com.moonwatch.core.ext.withLatestFrom
 import com.moonwatch.core.model.*
 import com.moonwatch.core.usecase.*
-import com.moonwatch.model.TokenAlertWithValue
+import com.moonwatch.model.TokenAlertWithValues
 import com.moonwatch.model.TokenWithValue
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
@@ -44,10 +44,10 @@ constructor(
   var tokenWithValueBeingAdded: LoadableParcelable<TokenWithValue> by
       savedStateHandle.mutableStateOf(LoadableParcelable(Empty))
   var tokenWithValueBeingViewed: TokenWithValue? by savedStateHandle.mutableStateOf(null)
-  var tokenAlertWithValueBeingViewed: TokenAlertWithValue? by savedStateHandle.mutableStateOf(null)
+  var tokenAlertWithValueBeingViewed: TokenAlertWithValues? by savedStateHandle.mutableStateOf(null)
 
-  val alertsFlow: Flow<PagingData<TokenAlertWithValue>> =
-      getAlertsFlow(pageSize = 20).map { it.map(::TokenAlertWithValue) }.distinctUntilChanged()
+  val alertsFlow: Flow<PagingData<TokenAlertWithValues>> =
+      getAlertsFlow(pageSize = 20).map { it.map(::TokenAlertWithValues) }.distinctUntilChanged()
 
   val tokensFlow: Flow<Loadable<PagingData<TokenWithValue>>> =
       getTokensFlow(pageSize = 20)
@@ -99,14 +99,14 @@ constructor(
 
   fun addAlert(
       address: String,
-      createdValueId: Long,
+      creationValueId: Long,
       sellPriceTargetUsd: BigDecimal?,
       buyPriceTargetUsd: BigDecimal?
   ) {
     viewModelScope.launch {
       addAlert.invoke(
           address,
-          createdValueId,
+          creationValueId,
           sellPriceTargetUsd = sellPriceTargetUsd,
           buyPriceTargetUsd = buyPriceTargetUsd,
       )
