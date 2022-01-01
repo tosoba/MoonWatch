@@ -13,6 +13,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -27,6 +28,7 @@ import com.moonwatch.model.TokenAlertWithValues
 import com.moonwatch.ui.TokenIcon
 import com.moonwatch.ui.dialog.DeleteItemDialog
 import com.moonwatch.ui.theme.Typography
+import java.math.BigDecimal
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 
@@ -86,7 +88,8 @@ private fun TokenAlertWithValueListItem(
     onDeleteClick: (TokenAlertWithValues) -> Unit,
     viewModel: MainViewModel = hiltViewModel()
 ) {
-  val (token, alert, _, currentValue) = tokenAlertWithValue
+  val (token, alert, creationValue, currentValue) = tokenAlertWithValue
+  val creationValueX = currentValue.usd / creationValue.usd
   ListItem(
       icon = { TokenIcon(token) },
       secondaryText = {
@@ -124,10 +127,15 @@ private fun TokenAlertWithValueListItem(
       },
       modifier = Modifier.fillMaxWidth().clickable { onItemClick(tokenAlertWithValue) },
   ) {
-    Text(
-        text = tokenAlertWithValue.token.name,
-        style = Typography.subtitle1.copy(fontWeight = FontWeight.Bold),
-        modifier = Modifier.fillMaxWidth(),
-    )
+    Row(horizontalArrangement = Arrangement.SpaceBetween) {
+      Text(
+          text = tokenAlertWithValue.token.name,
+          style = Typography.subtitle1.copy(fontWeight = FontWeight.Bold),
+      )
+      Text(
+          text = "${String.format("%.02f", creationValueX)}X",
+          color = if (creationValueX >= BigDecimal.ONE) Color.Green else Color.Red,
+      )
+    }
   }
 }
