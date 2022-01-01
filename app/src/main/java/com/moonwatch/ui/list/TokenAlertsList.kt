@@ -86,14 +86,14 @@ private fun TokenAlertWithValueListItem(
     onDeleteClick: (TokenAlertWithValues) -> Unit,
     viewModel: MainViewModel = hiltViewModel()
 ) {
-  val (token, alert, value) = tokenAlertWithValue
+  val (token, alert, _, currentValue) = tokenAlertWithValue
   ListItem(
       icon = { TokenIcon(token) },
       secondaryText = {
         Row(horizontalArrangement = Arrangement.Start) {
           Text(text = "$", style = Typography.subtitle2)
           Text(
-              text = value.usd.toPlainString(),
+              text = currentValue.usd.toPlainString(),
               style = Typography.subtitle2,
               maxLines = 1,
               modifier = Modifier.weight(1f),
