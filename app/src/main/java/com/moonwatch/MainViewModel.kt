@@ -41,6 +41,11 @@ constructor(
   val tokenAddress: Flow<String>
     get() = _tokenAddress
 
+  private val _clickedFiredAlertId = MutableStateFlow<Long?>(null)
+  private val _showAlertBottomSheet = MutableSharedFlow<Unit>()
+  val showAlertBottomSheet: Flow<Unit>
+    get() = _showAlertBottomSheet
+
   var tokenWithValueBeingAdded: LoadableParcelable<TokenWithValue> by
       savedStateHandle.mutableStateOf(LoadableParcelable(Empty))
   var tokenWithValueBeingViewed: TokenWithValue? by savedStateHandle.mutableStateOf(null)
@@ -78,6 +83,13 @@ constructor(
 
   init {
     tokenWithValueBeingAddedFlow.launchIn(viewModelScope)
+    _clickedFiredAlertId
+        .filterNotNull()
+        .onEach {
+          // TODO: get an alert with values by id -> set tokenAlertWithValueBeingViewed -> set Unit
+          // to _showAlertBottomSheet
+        }
+        .launchIn(viewModelScope)
   }
 
   suspend fun retryLoadingToken() {
@@ -141,5 +153,9 @@ constructor(
 
   fun clearTokenBeingAddedAddress() {
     _tokenAddress.value = ""
+  }
+
+  fun setClickedFiredAlertId(id: Long) {
+    _clickedFiredAlertId.value = id
   }
 }

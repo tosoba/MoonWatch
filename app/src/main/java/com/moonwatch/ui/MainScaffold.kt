@@ -67,6 +67,10 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
     }
   }
 
+  // TODO: use Launched effect to show bottom sheet when alert notification is clicked (observe
+  // showAlertBottomSheet flow) + show alerts list + highlight selected alert somehow and maybe
+  // scroll to it...
+
   BackPressedHandler(enabled = modalBottomSheetState.isVisible) {
     scope.launch { modalBottomSheetState.hide() }
   }

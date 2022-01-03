@@ -71,7 +71,12 @@ constructor(
           .setContentTitle(notificationTitle(tokenAlertWithValue))
           .setContentText(notificationContent(tokenAlertWithValue))
           .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-          .setContentIntent(PendingIntent.getActivity(context, 0, intent, 0))
+          .setContentIntent(
+              PendingIntent.getActivity(
+                  context,
+                  0,
+                  intent.apply { putExtra(ALERT_ID_EXTRA_KEY, tokenAlertWithValue.alert.id) },
+                  0))
           .setSmallIcon(android.R.drawable.ic_dialog_alert)
           .setAutoCancel(true)
           .setGroup(GROUP_KEY)
@@ -92,6 +97,7 @@ constructor(
     private const val CHANNEL_ID = "ALERT_NOTIFICATIONS"
     private const val GROUP_KEY = "ALERT_NOTIFICATIONS"
     private const val SUMMARY_NOTIFICATION_ID = 0
+    const val ALERT_ID_EXTRA_KEY = "ALERT_ID_EXTRA_KEY"
 
     fun createChannel(context: Context) {
       if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
