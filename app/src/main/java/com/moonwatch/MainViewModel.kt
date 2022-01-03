@@ -46,8 +46,12 @@ constructor(
   var tokenWithValueBeingViewed: TokenWithValue? by savedStateHandle.mutableStateOf(null)
   var tokenAlertWithValueBeingViewed: TokenAlertWithValues? by savedStateHandle.mutableStateOf(null)
 
-  val alertsFlow: Flow<PagingData<TokenAlertWithValues>> =
-      getAlertsFlow(pageSize = 20).map { it.map(::TokenAlertWithValues) }.distinctUntilChanged()
+  val alertsFlow: Flow<Loadable<PagingData<TokenAlertWithValues>>> =
+      getAlertsFlow(pageSize = 20)
+          .map { it.map(::TokenAlertWithValues) }
+          .distinctUntilChanged()
+          .map(PagingData<TokenAlertWithValues>::loadable)
+          .onStart { emit(LoadingFirst) }
 
   val tokensFlow: Flow<Loadable<PagingData<TokenWithValue>>> =
       getTokensFlow(pageSize = 20)

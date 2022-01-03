@@ -6,17 +6,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.paging.LoadState
+import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
 import coil.annotation.ExperimentalCoilApi
@@ -24,6 +23,8 @@ import com.github.marlonlom.utilities.timeago.TimeAgo
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.moonwatch.MainViewModel
 import com.moonwatch.core.android.ext.toEpochMillisDefault
+import com.moonwatch.core.model.LoadingInProgress
+import com.moonwatch.core.model.WithValue
 import com.moonwatch.model.TokenAlertWithValues
 import com.moonwatch.ui.TokenIcon
 import com.moonwatch.ui.dialog.DeleteItemDialog
@@ -31,6 +32,9 @@ import com.moonwatch.ui.theme.Typography
 import java.math.BigDecimal
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.map
 
 @Composable
 @OptIn(
@@ -52,14 +56,29 @@ fun TokenAlertsList(
     )
   }
 
-  val alerts = viewModel.alertsFlow.collectAsLazyPagingItems()
-  if (alerts.itemCount == 0) {
+  val alertsFlow = remember {
+    viewModel
+        .alertsFlow
+        .filterIsInstance<WithValue<PagingData<TokenAlertWithValues>>>()
+        .map(WithValue<PagingData<TokenAlertWithValues>>::value::get)
+  }
+  val alerts = alertsFlow.collectAsLazyPagingItems()
+
+  val alertsLoadingFlow = remember {
+    viewModel.alertsFlow.map {
+      val isLoading = it is LoadingInProgress || alerts.loadState.refresh is LoadState.Loading
+      if (!isLoading) {
+        var delaysCount = 0
+        while (alerts.itemCount == 0 && delaysCount++ < 10) delay(100L)
+      }
+      isLoading
+    }
+  }
+  val alertsLoadingState = alertsLoadingFlow.collectAsState(initial = alerts.itemCount == 0)
+
+  if (alertsLoadingState.value) {
     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-      Text(
-          text = "No saved alerts.",
-          textAlign = TextAlign.Center,
-          style = Typography.h6.copy(fontWeight = FontWeight.Bold),
-      )
+      CircularProgressIndicator()
     }
   } else {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -70,6 +89,18 @@ fun TokenAlertsList(
             onItemClick = onItemClick,
             onDeleteClick = { tokenAlertBeingDeleted = it },
         )
+      }
+
+      if (alerts.itemCount == 0) {
+        item {
+          Box(contentAlignment = Alignment.Center, modifier = Modifier.fillParentMaxSize()) {
+            Text(
+                text = "No created alerts.",
+                textAlign = TextAlign.Center,
+                style = Typography.h6.copy(fontWeight = FontWeight.Bold),
+            )
+          }
+        }
       }
     }
   }
