@@ -47,12 +47,12 @@ constructor(
             NotificationCompat.Builder(context, CHANNEL_ID)
                 .setContentTitle("$alertsCount price targets were hit.")
                 .setContentText(
-                    "Sell targets hit: ${sellAlerts.size}. Buy targets hit: ${buyAlerts.size}.")
+                    "${sellAlerts.size} sell targets hit. ${buyAlerts.size} buy targets hit.")
                 .setStyle(
                     NotificationCompat.InboxStyle()
                         .setBigContentTitle("$alertsCount price targets were hit.")
                         .setSummaryText(
-                            "Sell targets hit: ${sellAlerts.size}. Buy targets hit: ${buyAlerts.size}."))
+                            "${sellAlerts.size} sell targets hit. ${buyAlerts.size} buy targets hit."))
                 .setGroup(GROUP_KEY)
                 .setGroupSummary(true)
                 .setSmallIcon(android.R.drawable.ic_dialog_alert)
@@ -70,8 +70,6 @@ constructor(
       NotificationCompat.Builder(context, CHANNEL_ID)
           .setContentTitle(notificationTitle(tokenAlertWithValue))
           .setContentText(notificationContent(tokenAlertWithValue))
-          // TODO: show price from when alert was created + price increase/decrease
-          // percentage (in sub text)
           .setPriority(NotificationCompat.PRIORITY_DEFAULT)
           .setContentIntent(PendingIntent.getActivity(context, 0, intent, 0))
           .setSmallIcon(android.R.drawable.ic_dialog_alert)

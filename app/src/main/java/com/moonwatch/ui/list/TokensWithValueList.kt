@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.paging.LoadState
 import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
@@ -69,7 +68,7 @@ fun TokensWithValueList(
 
   val tokensLoadingFlow = remember {
     viewModel.tokensFlow.map {
-      val isLoading = it is LoadingInProgress || tokens.loadState.refresh is LoadState.Loading
+      val isLoading = it is LoadingInProgress
       if (!isLoading) {
         var delaysCount = 0
         while (tokens.itemCount == 0 && delaysCount++ < 10) delay(100L)

@@ -44,7 +44,7 @@ class MoonwatchApp : Application(), Configuration.Provider {
 
   private fun enqueueDeletingOldTokenValues() {
     val periodicSyncDataWork =
-        PeriodicWorkRequest.Builder(TokenValuesSyncWorker::class.java, 1, TimeUnit.DAYS)
+        PeriodicWorkRequest.Builder(DeleteOldTokenValuesWorker::class.java, 1, TimeUnit.DAYS)
             .addTag(DeleteOldTokenValuesWorker::class.simpleName!!)
             .build()
     WorkManager.getInstance(this)

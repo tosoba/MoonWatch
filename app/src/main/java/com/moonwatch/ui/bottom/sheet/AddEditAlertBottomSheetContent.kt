@@ -17,7 +17,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.moonwatch.MainViewModel
-import com.moonwatch.model.TokenAlert
 import com.moonwatch.ui.PriceTargetXText
 import com.moonwatch.ui.dialog.PriceTargetValidationMessagesDialog
 import java.math.BigDecimal
@@ -52,36 +51,43 @@ fun AddEditAlertBottomSheetContent(
       }
           ?: throw IllegalStateException()
 
-  fun alertBeingViewed(): TokenAlert {
-    if (alertBottomSheetMode != AlertBottomSheetMode.EDIT) throw IllegalStateException()
-    return viewModel.tokenAlertWithValueBeingViewed?.alert ?: throw IllegalStateException()
-  }
-
   val tokenValueScale = 0.coerceAtLeast(currentTokenValue.usd.stripTrailingZeros().scale())
 
   fun BigDecimal.toStringInTokenValueScale(): String =
       stripTrailingZeros().setScale(tokenValueScale, RoundingMode.HALF_UP).toPlainString()
 
-  var sellTarget by rememberSaveable {
-    mutableStateOf(
-        when (alertBottomSheetMode) {
-          AlertBottomSheetMode.ADD -> ""
-          AlertBottomSheetMode.EDIT -> {
-            alertBeingViewed().sellPriceTargetUsd?.toStringInTokenValueScale() ?: ""
-          }
-        },
-    )
-  }
-  var buyTarget by rememberSaveable {
-    mutableStateOf(
-        when (alertBottomSheetMode) {
-          AlertBottomSheetMode.ADD -> ""
-          AlertBottomSheetMode.EDIT -> {
-            alertBeingViewed().buyPriceTargetUsd?.toStringInTokenValueScale() ?: ""
-          }
-        },
-    )
-  }
+  var sellTarget by
+      rememberSaveable(
+          viewModel.tokenWithValueBeingViewed,
+          viewModel.tokenAlertWithValueBeingViewed,
+      ) {
+        mutableStateOf(
+            when (alertBottomSheetMode) {
+              AlertBottomSheetMode.ADD -> ""
+              AlertBottomSheetMode.EDIT -> {
+                viewModel.tokenAlertWithValueBeingViewed?.alert?.sellPriceTargetUsd
+                    ?.toStringInTokenValueScale()
+                    ?: ""
+              }
+            },
+        )
+      }
+  var buyTarget by
+      rememberSaveable(
+          viewModel.tokenWithValueBeingViewed,
+          viewModel.tokenAlertWithValueBeingViewed,
+      ) {
+        mutableStateOf(
+            when (alertBottomSheetMode) {
+              AlertBottomSheetMode.ADD -> ""
+              AlertBottomSheetMode.EDIT -> {
+                viewModel.tokenAlertWithValueBeingViewed?.alert?.buyPriceTargetUsd
+                    ?.toStringInTokenValueScale()
+                    ?: ""
+              }
+            },
+        )
+      }
 
   fun isTargetValid(target: String): Boolean = target.toBigDecimalOrNull() != null
   fun isTargetValidOrEmpty(target: String): Boolean = target.isEmpty() || isTargetValid(target)
@@ -89,13 +95,25 @@ fun AddEditAlertBottomSheetContent(
       if (isTargetValid(target)) target.toBigDecimal() / tokenValueForCalculations.usd
       else BigDecimal.ONE
 
-  var sellTargetX by rememberSaveable { mutableStateOf(targetX(sellTarget)) }
-  var buyTargetX by rememberSaveable { mutableStateOf(targetX(buyTarget)) }
+  var sellTargetX by
+      rememberSaveable(
+          viewModel.tokenWithValueBeingViewed,
+          viewModel.tokenAlertWithValueBeingViewed,
+      ) { mutableStateOf(targetX(sellTarget)) }
+  var buyTargetX by
+      rememberSaveable(
+          viewModel.tokenWithValueBeingViewed,
+          viewModel.tokenAlertWithValueBeingViewed,
+      ) { mutableStateOf(targetX(buyTarget)) }
 
   val scrollState = rememberScrollState()
   val scope = rememberCoroutineScope()
 
-  var priceTargetValidationMessages by rememberSaveable { mutableStateOf(emptyList<String>()) }
+  var priceTargetValidationMessages by
+      rememberSaveable(
+          viewModel.tokenWithValueBeingViewed,
+          viewModel.tokenAlertWithValueBeingViewed,
+      ) { mutableStateOf(emptyList<String>()) }
   if (priceTargetValidationMessages.isNotEmpty()) {
     PriceTargetValidationMessagesDialog(messages = priceTargetValidationMessages) {
       priceTargetValidationMessages = emptyList()
@@ -260,7 +278,7 @@ fun AddEditAlertBottomSheetContent(
               }
               AlertBottomSheetMode.EDIT -> {
                 viewModel.editAlert(
-                    id = alertBeingViewed().id,
+                    id = requireNotNull(viewModel.tokenAlertWithValueBeingViewed).alert.id,
                     sellPriceTargetUsd = sellTarget.toBigDecimalOrNull(),
                     buyPriceTargetUsd = buyTarget.toBigDecimalOrNull(),
                 )
