@@ -17,6 +17,7 @@ import com.moonwatch.core.exception.InvalidAddressException
 import com.moonwatch.core.model.Failed
 import com.moonwatch.core.model.LoadingInProgress
 import com.moonwatch.core.model.Ready
+import com.moonwatch.model.TokenWithValue
 import com.moonwatch.ui.RetryLoadingTokenButton
 import java.io.IOException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -29,6 +30,7 @@ import retrofit2.HttpException
 @OptIn(ExperimentalCoroutinesApi::class, ExperimentalMaterialApi::class, FlowPreview::class)
 fun SaveTokenBottomSheetContent(
     modalBottomSheetState: ModalBottomSheetState,
+    onAddAlertClick: (TokenWithValue) -> Unit,
     viewModel: MainViewModel = hiltViewModel()
 ) {
   val scope = rememberCoroutineScope()
@@ -107,23 +109,25 @@ fun SaveTokenBottomSheetContent(
           OutlinedButton(
               onClick = {
                 scope.launch {
-                  viewModel.clearTokenBeingAddedAddress()
-                  modalBottomSheetState.hide()
-                }
-              },
-              modifier = Modifier.weight(1f),
-          ) { Text(text = "Cancel") }
-          Box(modifier = Modifier.size(5.dp))
-          OutlinedButton(
-              onClick = {
-                scope.launch {
                   viewModel.saveTokenCurrentlyBeingAdded()
                   modalBottomSheetState.hide()
                 }
               },
               modifier = Modifier.weight(1f),
           ) { Text(text = "Save") }
+          Box(modifier = Modifier.size(5.dp))
+          OutlinedButton(
+              onClick = {
+                scope.launch { viewModel.saveTokenCurrentlyBeingAdded() }
+                onAddAlertClick(tokenWithValue.value)
+              },
+              modifier = Modifier.weight(1f),
+          ) { Text(text = "Add an alert") }
         }
+        OutlinedButton(
+            onClick = { scope.launch { viewModel.clearTokenBeingAddedAddress() } },
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text(text = "Clear") }
       }
       is LoadingInProgress -> {
         Box(

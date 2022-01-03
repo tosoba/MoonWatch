@@ -73,7 +73,15 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
   ModalBottomSheetLayout(
       sheetContent = {
         when (bottomSheetDialogMode) {
-          BottomSheetMode.ADD_TOKEN -> SaveTokenBottomSheetContent(modalBottomSheetState)
+          BottomSheetMode.ADD_TOKEN -> {
+            SaveTokenBottomSheetContent(
+                modalBottomSheetState,
+                onAddAlertClick = {
+                  viewModel.tokenWithValueBeingViewed = it
+                  bottomSheetDialogMode = BottomSheetMode.ADD_ALERT
+                },
+            )
+          }
           BottomSheetMode.VIEW_TOKEN -> {
             ViewTokenBottomSheetContent(
                 onAddAlertClick = { bottomSheetDialogMode = BottomSheetMode.ADD_ALERT },

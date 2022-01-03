@@ -19,7 +19,7 @@ fun ViewTokenBottomSheetContent(
     onAddAlertClick: (TokenWithValue) -> Unit,
     viewModel: MainViewModel = hiltViewModel()
 ) {
-  val tokenWithValue: TokenWithValue =
+  val tokenWithValue =
       viewModel.tokenWithValueBeingViewed ?: throw IllegalArgumentException()
   Column(modifier = Modifier.padding(horizontal = 10.dp)) {
     Box(modifier = Modifier.height(15.dp))
@@ -27,7 +27,7 @@ fun ViewTokenBottomSheetContent(
     OutlinedButton(
         onClick = { onAddAlertClick(tokenWithValue) },
         modifier = Modifier.fillMaxWidth(),
-    ) { Text(text = "Create an alert") }
+    ) { Text(text = "Add an alert") }
     Box(modifier = Modifier.height(15.dp))
   }
 }

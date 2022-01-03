@@ -128,8 +128,8 @@ fun AddEditAlertBottomSheetContent(
     BottomSheetContentTitleText(
         text =
             when (alertBottomSheetMode) {
-              AlertBottomSheetMode.ADD -> "Add a new alert"
-              AlertBottomSheetMode.EDIT -> "Edit alert"
+              AlertBottomSheetMode.ADD -> "Add an alert"
+              AlertBottomSheetMode.EDIT -> "Edit an alert"
             },
     )
     TokenValueBottomSheetColumnContent(token, currentTokenValue)
