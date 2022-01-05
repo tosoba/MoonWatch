@@ -35,19 +35,19 @@ fun AddEditAlertBottomSheetContent(
   val token =
       when (alertBottomSheetMode) {
         AlertBottomSheetMode.ADD -> viewModel.tokenWithValueBeingViewed?.token
-        AlertBottomSheetMode.EDIT -> viewModel.tokenAlertWithValueBeingViewed?.token
+        AlertBottomSheetMode.EDIT -> viewModel.tokenAlertWithValuesBeingViewed?.token
       }
           ?: throw IllegalStateException()
   val currentTokenValue =
       when (alertBottomSheetMode) {
         AlertBottomSheetMode.ADD -> viewModel.tokenWithValueBeingViewed?.value
-        AlertBottomSheetMode.EDIT -> viewModel.tokenAlertWithValueBeingViewed?.currentValue
+        AlertBottomSheetMode.EDIT -> viewModel.tokenAlertWithValuesBeingViewed?.currentValue
       }
           ?: throw IllegalStateException()
   val tokenValueForCalculations =
       when (alertBottomSheetMode) {
         AlertBottomSheetMode.ADD -> viewModel.tokenWithValueBeingViewed?.value
-        AlertBottomSheetMode.EDIT -> viewModel.tokenAlertWithValueBeingViewed?.creationValue
+        AlertBottomSheetMode.EDIT -> viewModel.tokenAlertWithValuesBeingViewed?.creationValue
       }
           ?: throw IllegalStateException()
 
@@ -59,13 +59,13 @@ fun AddEditAlertBottomSheetContent(
   var sellTarget by
       rememberSaveable(
           viewModel.tokenWithValueBeingViewed,
-          viewModel.tokenAlertWithValueBeingViewed,
+          viewModel.tokenAlertWithValuesBeingViewed,
       ) {
         mutableStateOf(
             when (alertBottomSheetMode) {
               AlertBottomSheetMode.ADD -> ""
               AlertBottomSheetMode.EDIT -> {
-                viewModel.tokenAlertWithValueBeingViewed?.alert?.sellPriceTargetUsd
+                viewModel.tokenAlertWithValuesBeingViewed?.alert?.sellPriceTargetUsd
                     ?.toStringInTokenValueScale()
                     ?: ""
               }
@@ -75,13 +75,13 @@ fun AddEditAlertBottomSheetContent(
   var buyTarget by
       rememberSaveable(
           viewModel.tokenWithValueBeingViewed,
-          viewModel.tokenAlertWithValueBeingViewed,
+          viewModel.tokenAlertWithValuesBeingViewed,
       ) {
         mutableStateOf(
             when (alertBottomSheetMode) {
               AlertBottomSheetMode.ADD -> ""
               AlertBottomSheetMode.EDIT -> {
-                viewModel.tokenAlertWithValueBeingViewed?.alert?.buyPriceTargetUsd
+                viewModel.tokenAlertWithValuesBeingViewed?.alert?.buyPriceTargetUsd
                     ?.toStringInTokenValueScale()
                     ?: ""
               }
@@ -98,12 +98,12 @@ fun AddEditAlertBottomSheetContent(
   var sellTargetX by
       rememberSaveable(
           viewModel.tokenWithValueBeingViewed,
-          viewModel.tokenAlertWithValueBeingViewed,
+          viewModel.tokenAlertWithValuesBeingViewed,
       ) { mutableStateOf(targetX(sellTarget)) }
   var buyTargetX by
       rememberSaveable(
           viewModel.tokenWithValueBeingViewed,
-          viewModel.tokenAlertWithValueBeingViewed,
+          viewModel.tokenAlertWithValuesBeingViewed,
       ) { mutableStateOf(targetX(buyTarget)) }
 
   val scrollState = rememberScrollState()
@@ -112,7 +112,7 @@ fun AddEditAlertBottomSheetContent(
   var priceTargetValidationMessages by
       rememberSaveable(
           viewModel.tokenWithValueBeingViewed,
-          viewModel.tokenAlertWithValueBeingViewed,
+          viewModel.tokenAlertWithValuesBeingViewed,
       ) { mutableStateOf(emptyList<String>()) }
   if (priceTargetValidationMessages.isNotEmpty()) {
     PriceTargetValidationMessagesDialog(messages = priceTargetValidationMessages) {
@@ -278,7 +278,7 @@ fun AddEditAlertBottomSheetContent(
               }
               AlertBottomSheetMode.EDIT -> {
                 viewModel.editAlert(
-                    id = requireNotNull(viewModel.tokenAlertWithValueBeingViewed).alert.id,
+                    id = requireNotNull(viewModel.tokenAlertWithValuesBeingViewed).alert.id,
                     sellPriceTargetUsd = sellTarget.toBigDecimalOrNull(),
                     buyPriceTargetUsd = buyTarget.toBigDecimalOrNull(),
                 )

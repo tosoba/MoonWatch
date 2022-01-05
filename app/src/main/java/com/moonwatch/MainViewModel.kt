@@ -34,6 +34,7 @@ constructor(
     private val updateAlert: UpdateAlert,
     private val deleteAlert: DeleteAlert,
     private val toggleAlertActive: ToggleAlertActive,
+    private val getAlert: GetAlert,
     getAlertsFlow: GetAlertsFlow,
     getTokensFlow: GetTokensFlow,
 ) : ViewModel() {
@@ -49,7 +50,8 @@ constructor(
   var tokenWithValueBeingAdded: LoadableParcelable<TokenWithValue> by
       savedStateHandle.mutableStateOf(LoadableParcelable(Empty))
   var tokenWithValueBeingViewed: TokenWithValue? by savedStateHandle.mutableStateOf(null)
-  var tokenAlertWithValueBeingViewed: TokenAlertWithValues? by savedStateHandle.mutableStateOf(null)
+  var tokenAlertWithValuesBeingViewed: TokenAlertWithValues? by
+      savedStateHandle.mutableStateOf(null)
 
   val alertsFlow: Flow<Loadable<PagingData<TokenAlertWithValues>>> =
       getAlertsFlow(pageSize = 20)
@@ -81,15 +83,15 @@ constructor(
             .map { loadable -> loadable.map(::TokenWithValue).parcelize() }
             .onEach(::tokenWithValueBeingAdded::set)
 
+  private val clickedAlertFlow =
+      _clickedFiredAlertId.filterNotNull().onEach {
+        tokenAlertWithValuesBeingViewed = TokenAlertWithValues(getAlert(id = it))
+        _showAlertBottomSheet.emit(Unit)
+      }
+
   init {
     tokenWithValueBeingAddedFlow.launchIn(viewModelScope)
-    _clickedFiredAlertId
-        .filterNotNull()
-        .onEach {
-          // TODO: get an alert with values by id -> set tokenAlertWithValueBeingViewed -> set Unit
-          // to _showAlertBottomSheet
-        }
-        .launchIn(viewModelScope)
+    clickedAlertFlow.launchIn(viewModelScope)
   }
 
   suspend fun retryLoadingToken() {

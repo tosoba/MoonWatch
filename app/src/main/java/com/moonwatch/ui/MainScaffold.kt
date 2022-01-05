@@ -33,6 +33,8 @@ import com.moonwatch.ui.theme.Typography
 import kotlin.math.roundToInt
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 @Composable
@@ -47,9 +49,9 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
   val scope = rememberCoroutineScope()
   val pageState = rememberPagerState()
   val scaffoldState = rememberScaffoldState()
+  val bottomNavigationItems = MainBottomNavigationItem.values()
   val modalBottomSheetState =
       rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
-  val items = MainBottomNavigationItem.values()
   var bottomSheetDialogMode by rememberSaveable { mutableStateOf(BottomSheetMode.ADD_TOKEN) }
 
   val appBarHeightDp = 56.dp
@@ -67,9 +69,17 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
     }
   }
 
-  // TODO: use Launched effect to show bottom sheet when alert notification is clicked (observe
-  // showAlertBottomSheet flow) + show alerts list + highlight selected alert somehow and maybe
-  // scroll to it...
+  LaunchedEffect(Unit) {
+    viewModel
+        .showAlertBottomSheet
+        .onEach {
+          pageState.animateScrollToPage(
+              MainBottomNavigationItem.values().indexOf(MainBottomNavigationItem.ALERTS))
+          bottomSheetDialogMode = BottomSheetMode.EDIT_ALERT
+          scope.launch { modalBottomSheetState.show() }
+        }
+        .launchIn(scope)
+  }
 
   BackPressedHandler(enabled = modalBottomSheetState.isVisible) {
     scope.launch { modalBottomSheetState.hide() }
@@ -126,7 +136,7 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
                     IntOffset(x = 0, y = bottomAppBarOffsetHeightPx.roundToInt())
                   },
           ) {
-            items.forEachIndexed { index, item ->
+            bottomNavigationItems.forEachIndexed { index, item ->
               BottomNavigationItem(
                   icon = {
                     Icon(
@@ -159,10 +169,10 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
     ) {
       HorizontalPager(
           state = pageState,
-          count = items.size,
+          count = bottomNavigationItems.size,
           modifier = Modifier.fillMaxSize(),
       ) { page ->
-        when (items[page]) {
+        when (bottomNavigationItems[page]) {
           MainBottomNavigationItem.TOKENS -> {
             TokensWithValueList(
                 onItemClick = {
@@ -176,7 +186,7 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
               TokenAlertsList(
                   onItemClick = {
                     bottomSheetDialogMode = BottomSheetMode.EDIT_ALERT
-                    viewModel.tokenAlertWithValueBeingViewed = it
+                    viewModel.tokenAlertWithValuesBeingViewed = it
                     scope.launch { modalBottomSheetState.show() }
                   },
               )

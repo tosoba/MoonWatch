@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.Flow
 interface IAlertRepo {
   fun getTokenAlertsWithValues(pageSize: Int): Flow<PagingData<ITokenAlertWithValues>>
 
+  suspend fun getTokenAlertWithValues(id: Long): ITokenAlertWithValues
+
   suspend fun addAlert(
       address: String,
       creationValueId: Long,

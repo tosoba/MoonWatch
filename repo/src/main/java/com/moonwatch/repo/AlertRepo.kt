@@ -25,6 +25,9 @@ class AlertRepo @Inject constructor(private val dao: AlertDao) : IAlertRepo {
     return pager.flow.map { pagingData -> pagingData.map { it } }
   }
 
+  override suspend fun getTokenAlertWithValues(id: Long): ITokenAlertWithValues =
+      dao.selectTokenAlertWithValueById(id)
+
   override suspend fun addAlert(
       address: String,
       creationValueId: Long,

@@ -59,6 +59,24 @@ interface AlertDao {
     ORDER BY a.last_fired_at, a.created_at DESC""")
   fun selectTokenAlertsWithValuesOrderedByCreatedAt(): PagingSource<Int, TokenAlertWithValues>
 
+  @Query(
+      """SELECT a.*, 
+    t.address AS token_address, t.name AS token_name, 
+    t.symbol AS token_symbol, t.chain AS token_chain,
+    crv.address AS _creation_value_address, crv.usd AS _creation_value_usd,
+    crv.bnb AS _creation_value_bnb, crv.eth AS _creation_value_eth,
+    crv.updated_at AS _creation_value_updated_at, crv.id AS _creation_value_id,
+    cuv.address AS current_value_address, cuv.usd AS current_value_usd,
+    cuv.bnb AS current_value_bnb, cuv.eth AS current_value_eth,
+    cuv.updated_at AS current_value_updated_at, cuv.id AS current_value_id
+    FROM token_alert a 
+    INNER JOIN token AS t ON a.address = t.address 
+    INNER JOIN token_value cuv ON cuv.address = t.address 
+    INNER JOIN token_value crv ON crv.id = a.creation_value_id
+    WHERE cuv.id = (SELECT MAX(id) FROM token_value WHERE address = t.address)  
+    AND a.id = :id""")
+  suspend fun selectTokenAlertWithValueById(id: Long): TokenAlertWithValues
+
   @Query("DELETE FROM token_alert WHERE id = :id") suspend fun deleteAlertById(id: Long)
 
   @Query(

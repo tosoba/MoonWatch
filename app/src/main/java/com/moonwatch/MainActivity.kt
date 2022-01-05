@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
@@ -25,6 +26,8 @@ import kotlinx.coroutines.FlowPreview
     FlowPreview::class,
 )
 class MainActivity : ComponentActivity() {
+  private val viewModel: MainViewModel by viewModels()
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent {
@@ -36,6 +39,6 @@ class MainActivity : ComponentActivity() {
     val clickedFiredAlertId =
         intent?.getLongExtra(AlertNotificationManager.ALERT_ID_EXTRA_KEY, -1L) ?: return
     if (clickedFiredAlertId == -1L) return
-    // TODO: inject VM -> set fired alert id
+    viewModel.setClickedFiredAlertId(id = clickedFiredAlertId)
   }
 }
