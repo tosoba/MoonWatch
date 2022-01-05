@@ -8,6 +8,7 @@ import androidx.activity.viewModels
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.lifecycle.lifecycleScope
 import coil.annotation.ExperimentalCoilApi
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.moonwatch.repo.notification.AlertNotificationManager
@@ -39,6 +40,6 @@ class MainActivity : ComponentActivity() {
     val clickedFiredAlertId =
         intent?.getLongExtra(AlertNotificationManager.ALERT_ID_EXTRA_KEY, -1L) ?: return
     if (clickedFiredAlertId == -1L) return
-    viewModel.setClickedFiredAlertId(id = clickedFiredAlertId)
+    lifecycleScope.launchWhenResumed { viewModel.setClickedFiredAlertId(id = clickedFiredAlertId) }
   }
 }

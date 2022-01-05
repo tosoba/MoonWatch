@@ -42,7 +42,7 @@ constructor(
   val tokenAddress: Flow<String>
     get() = _tokenAddress
 
-  private val _clickedFiredAlertId = MutableStateFlow<Long?>(null)
+  private val _clickedFiredAlertId = MutableSharedFlow<Long>()
   private val _showAlertBottomSheet = MutableSharedFlow<Unit>()
   val showAlertBottomSheet: Flow<Unit>
     get() = _showAlertBottomSheet
@@ -83,11 +83,12 @@ constructor(
             .map { loadable -> loadable.map(::TokenWithValue).parcelize() }
             .onEach(::tokenWithValueBeingAdded::set)
 
-  private val clickedAlertFlow =
-      _clickedFiredAlertId.filterNotNull().onEach {
-        tokenAlertWithValuesBeingViewed = TokenAlertWithValues(getAlert(id = it))
-        _showAlertBottomSheet.emit(Unit)
-      }
+  private val clickedAlertFlow
+    get() =
+        _clickedFiredAlertId.onEach {
+          tokenAlertWithValuesBeingViewed = TokenAlertWithValues(getAlert(id = it))
+          _showAlertBottomSheet.emit(Unit)
+        }
 
   init {
     tokenWithValueBeingAddedFlow.launchIn(viewModelScope)
@@ -157,7 +158,7 @@ constructor(
     _tokenAddress.value = ""
   }
 
-  fun setClickedFiredAlertId(id: Long) {
-    _clickedFiredAlertId.value = id
+  suspend fun setClickedFiredAlertId(id: Long) {
+    _clickedFiredAlertId.emit(id)
   }
 }
