@@ -87,11 +87,11 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
     scope.launch { modalBottomSheetState.hide() }
   }
 
-  val tokenBeingDeleted = rememberSaveable { mutableStateOf<Token?>(null) }
-  tokenBeingDeleted.value?.let { token ->
+  var tokenBeingDeleted by rememberSaveable { mutableStateOf<Token?>(null) }
+  tokenBeingDeleted?.let { token ->
     DeleteItemDialog(
         itemName = "${token.name} with all associated alerts",
-        dismiss = { tokenBeingDeleted.value = null },
+        dismiss = { tokenBeingDeleted = null },
         delete = {
           scope.launch { modalBottomSheetState.hide() }
           viewModel.deleteToken(token.address)
@@ -114,7 +114,7 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
           BottomSheetMode.VIEW_TOKEN -> {
             ViewTokenBottomSheetContent(
                 onAddAlertClick = { bottomSheetDialogMode = BottomSheetMode.ADD_ALERT },
-                onDeleteTokenClick = { (token) -> tokenBeingDeleted.value = token },
+                onDeleteTokenClick = { (token) -> tokenBeingDeleted = token },
             )
           }
           BottomSheetMode.ADD_ALERT -> {

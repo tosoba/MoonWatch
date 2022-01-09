@@ -24,10 +24,7 @@ fun ViewTokenBottomSheetContent(
   Column(modifier = Modifier.padding(horizontal = 10.dp)) {
     Box(modifier = Modifier.height(15.dp))
     TokenValueBottomSheetColumnContent(tokenWithValue.token, tokenWithValue.value)
-    Row(
-        modifier = Modifier.padding(all = 8.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-    ) {
+    Row(horizontalArrangement = Arrangement.SpaceEvenly) {
       OutlinedButton(
           onClick = { onDeleteTokenClick(tokenWithValue) },
           modifier = Modifier.weight(1f),

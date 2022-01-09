@@ -17,7 +17,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.moonwatch.MainViewModel
+import com.moonwatch.model.TokenAlertWithValues
 import com.moonwatch.ui.PriceTargetXText
+import com.moonwatch.ui.dialog.DeleteItemDialog
 import com.moonwatch.ui.dialog.PriceTargetValidationMessagesDialog
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -32,6 +34,20 @@ fun AddEditAlertBottomSheetContent(
     alertBottomSheetMode: AlertBottomSheetMode,
     viewModel: MainViewModel = hiltViewModel(),
 ) {
+  val scope = rememberCoroutineScope()
+
+  var tokenAlertBeingDeleted by rememberSaveable { mutableStateOf<TokenAlertWithValues?>(null) }
+  tokenAlertBeingDeleted?.let { tokenAlertWithValue ->
+    DeleteItemDialog(
+        itemName = "${tokenAlertWithValue.token.name} alert",
+        dismiss = { tokenAlertBeingDeleted = null },
+        delete = {
+          scope.launch { modalBottomSheetState.hide() }
+          viewModel.deleteAlert(tokenAlertWithValue.alert.id)
+        },
+    )
+  }
+
   val token =
       when (alertBottomSheetMode) {
         AlertBottomSheetMode.ADD -> viewModel.tokenWithValueBeingViewed?.token
@@ -107,7 +123,6 @@ fun AddEditAlertBottomSheetContent(
       ) { mutableStateOf(targetX(buyTarget)) }
 
   val scrollState = rememberScrollState()
-  val scope = rememberCoroutineScope()
 
   var priceTargetValidationMessages by
       rememberSaveable(
@@ -248,50 +263,60 @@ fun AddEditAlertBottomSheetContent(
     }
 
     val context = LocalContext.current
-    OutlinedButton(
-        onClick = {
-          val validationMessages = mutableListOf<String>()
-          if (buyTarget.isBlank() && sellTarget.isBlank()) {
-            validationMessages.add("You must specify either a buy or a sell price target.")
-          } else {
-            if (isTargetValid(buyTarget) && buyTarget.toBigDecimal() >= currentTokenValue.usd) {
-              validationMessages.add(
-                  "Chosen buy price target is larger or equal to current token price.")
+    Row(horizontalArrangement = Arrangement.SpaceEvenly) {
+      if (alertBottomSheetMode == AlertBottomSheetMode.EDIT) {
+        OutlinedButton(
+            onClick = { tokenAlertBeingDeleted = viewModel.tokenAlertWithValuesBeingViewed },
+            modifier = Modifier.weight(1f),
+        ) { Text(text = "Delete") }
+        Box(Modifier.size(5.dp))
+      }
+      OutlinedButton(
+          onClick = {
+            val validationMessages = mutableListOf<String>()
+            if (buyTarget.isBlank() && sellTarget.isBlank()) {
+              validationMessages.add("You must specify either a buy or a sell price target.")
+            } else {
+              if (isTargetValid(buyTarget) && buyTarget.toBigDecimal() >= currentTokenValue.usd) {
+                validationMessages.add(
+                    "Chosen buy price target is larger or equal to current token price.")
+              }
+              if (isTargetValid(sellTarget) && sellTarget.toBigDecimal() <= currentTokenValue.usd) {
+                validationMessages.add(
+                    "Chosen sell price target is less or equal to current token price.")
+              }
             }
-            if (isTargetValid(sellTarget) && sellTarget.toBigDecimal() <= currentTokenValue.usd) {
-              validationMessages.add(
-                  "Chosen sell price target is less or equal to current token price.")
-            }
-          }
 
-          if (validationMessages.isEmpty()) {
-            when (alertBottomSheetMode) {
-              AlertBottomSheetMode.ADD -> {
-                viewModel.addAlert(
-                    address = token.address,
-                    creationValueId = currentTokenValue.id,
-                    sellPriceTargetUsd = sellTarget.toBigDecimalOrNull(),
-                    buyPriceTargetUsd = buyTarget.toBigDecimalOrNull(),
-                )
-                Toast.makeText(context, "Alert was created successfully.", Toast.LENGTH_SHORT)
-                    .show()
+            if (validationMessages.isEmpty()) {
+              when (alertBottomSheetMode) {
+                AlertBottomSheetMode.ADD -> {
+                  viewModel.addAlert(
+                      address = token.address,
+                      creationValueId = currentTokenValue.id,
+                      sellPriceTargetUsd = sellTarget.toBigDecimalOrNull(),
+                      buyPriceTargetUsd = buyTarget.toBigDecimalOrNull(),
+                  )
+                  Toast.makeText(context, "Alert was created successfully.", Toast.LENGTH_SHORT)
+                      .show()
+                }
+                AlertBottomSheetMode.EDIT -> {
+                  viewModel.editAlert(
+                      id = requireNotNull(viewModel.tokenAlertWithValuesBeingViewed).alert.id,
+                      sellPriceTargetUsd = sellTarget.toBigDecimalOrNull(),
+                      buyPriceTargetUsd = buyTarget.toBigDecimalOrNull(),
+                  )
+                  Toast.makeText(context, "Alert was edited successfully.", Toast.LENGTH_SHORT)
+                      .show()
+                }
               }
-              AlertBottomSheetMode.EDIT -> {
-                viewModel.editAlert(
-                    id = requireNotNull(viewModel.tokenAlertWithValuesBeingViewed).alert.id,
-                    sellPriceTargetUsd = sellTarget.toBigDecimalOrNull(),
-                    buyPriceTargetUsd = buyTarget.toBigDecimalOrNull(),
-                )
-                Toast.makeText(context, "Alert was edited successfully.", Toast.LENGTH_SHORT).show()
-              }
+              scope.launch { modalBottomSheetState.hide() }
+            } else {
+              priceTargetValidationMessages = validationMessages
             }
-            scope.launch { modalBottomSheetState.hide() }
-          } else {
-            priceTargetValidationMessages = validationMessages
-          }
-        },
-        modifier = Modifier.fillMaxWidth(),
-    ) { Text(text = "Save") }
+          },
+          modifier = Modifier.weight(1f),
+      ) { Text(text = "Save") }
+    }
 
     Box(modifier = Modifier.height(15.dp))
   }
