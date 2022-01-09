@@ -74,9 +74,15 @@ constructor(
           .setContentIntent(
               PendingIntent.getActivity(
                   context,
-                  0,
+                  1,
                   intent.apply { putExtra(ALERT_ID_EXTRA_KEY, tokenAlertWithValue.alert.id) },
-                  0))
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                  } else {
+                    PendingIntent.FLAG_UPDATE_CURRENT
+                  },
+              ),
+          )
           .setSmallIcon(android.R.drawable.ic_dialog_alert)
           .setAutoCancel(true)
           .setGroup(GROUP_KEY)
