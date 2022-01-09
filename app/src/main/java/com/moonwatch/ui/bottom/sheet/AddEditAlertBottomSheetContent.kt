@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -169,12 +170,25 @@ fun AddEditAlertBottomSheetContent(
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         trailingIcon = {
-          IconButton(
-              onClick = {
-                buyTarget = ""
-                buyTargetX = BigDecimal.ONE
-              },
-          ) { Icon(Icons.Default.Clear, "") }
+          Row {
+            if (alertBottomSheetMode == AlertBottomSheetMode.EDIT) {
+              IconButton(
+                  onClick = {
+                    buyTarget =
+                        viewModel.tokenAlertWithValuesBeingViewed?.alert?.buyPriceTargetUsd
+                            ?.toStringInTokenValueScale()
+                            ?: ""
+                    buyTargetX = targetX(buyTarget)
+                  },
+              ) { Icon(Icons.Default.ArrowBack, "") }
+            }
+            IconButton(
+                onClick = {
+                  buyTarget = ""
+                  buyTargetX = BigDecimal.ONE
+                },
+            ) { Icon(Icons.Default.Clear, "") }
+          }
         },
         modifier = Modifier.fillMaxWidth(),
     )
@@ -214,12 +228,25 @@ fun AddEditAlertBottomSheetContent(
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         trailingIcon = {
-          IconButton(
-              onClick = {
-                sellTarget = ""
-                sellTargetX = BigDecimal.ONE
-              },
-          ) { Icon(Icons.Default.Clear, "") }
+          Row {
+            if (alertBottomSheetMode == AlertBottomSheetMode.EDIT) {
+              IconButton(
+                  onClick = {
+                    sellTarget =
+                        viewModel.tokenAlertWithValuesBeingViewed?.alert?.sellPriceTargetUsd
+                            ?.toStringInTokenValueScale()
+                            ?: ""
+                    sellTargetX = targetX(buyTarget)
+                  },
+              ) { Icon(Icons.Default.ArrowBack, "") }
+            }
+            IconButton(
+                onClick = {
+                  sellTarget = ""
+                  sellTargetX = BigDecimal.ONE
+                },
+            ) { Icon(Icons.Default.Clear, "") }
+          }
         },
         modifier = Modifier.fillMaxWidth(),
     )
