@@ -66,14 +66,14 @@ constructor(
     updatedValues.forEach { (address, value) ->
       val alerts = groupedAlerts[address] ?: return@forEach
       alerts
-          .filter { (alert) -> alert.sellPriceTargetUsd?.let { it > value.usd } ?: false }
+          .filter { (alert) -> alert.sellPriceTargetUsd?.let { it <= value.usd } ?: false }
           .maxByOrNull { (alert) -> alert.sellPriceTargetUsd!! }
           ?.let {
             alertIdsToFire.add(it.alert.id)
             sellAlertsToFire.add(it)
           }
       alerts
-          .filter { (alert) -> alert.buyPriceTargetUsd?.let { it < value.usd } ?: false }
+          .filter { (alert) -> alert.buyPriceTargetUsd?.let { it >= value.usd } ?: false }
           .minByOrNull { (alert) -> alert.buyPriceTargetUsd!! }
           ?.let {
             alertIdsToFire.add(it.alert.id)
