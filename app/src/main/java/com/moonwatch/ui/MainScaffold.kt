@@ -26,7 +26,9 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.moonwatch.MainViewModel
+import com.moonwatch.model.Token
 import com.moonwatch.ui.bottom.sheet.*
+import com.moonwatch.ui.dialog.DeleteItemDialog
 import com.moonwatch.ui.list.TokenAlertsList
 import com.moonwatch.ui.list.TokensWithValueList
 import com.moonwatch.ui.theme.Typography
@@ -84,6 +86,19 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
   BackPressedHandler(enabled = modalBottomSheetState.isVisible) {
     scope.launch { modalBottomSheetState.hide() }
   }
+
+  val tokenBeingDeleted = rememberSaveable { mutableStateOf<Token?>(null) }
+  tokenBeingDeleted.value?.let { token ->
+    DeleteItemDialog(
+        itemName = "${token.name} with all associated alerts",
+        dismiss = { tokenBeingDeleted.value = null },
+        delete = {
+          scope.launch { modalBottomSheetState.hide() }
+          viewModel.deleteToken(token.address)
+        },
+    )
+  }
+
   ModalBottomSheetLayout(
       sheetContent = {
         when (bottomSheetDialogMode) {
@@ -99,6 +114,7 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
           BottomSheetMode.VIEW_TOKEN -> {
             ViewTokenBottomSheetContent(
                 onAddAlertClick = { bottomSheetDialogMode = BottomSheetMode.ADD_ALERT },
+                onDeleteTokenClick = { (token) -> tokenBeingDeleted.value = token },
             )
           }
           BottomSheetMode.ADD_ALERT -> {

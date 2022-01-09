@@ -4,13 +4,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -26,10 +22,8 @@ import com.moonwatch.MainViewModel
 import com.moonwatch.core.android.ext.toEpochMillisDefault
 import com.moonwatch.core.model.LoadingInProgress
 import com.moonwatch.core.model.WithValue
-import com.moonwatch.model.Token
 import com.moonwatch.model.TokenWithValue
 import com.moonwatch.ui.TokenIcon
-import com.moonwatch.ui.dialog.DeleteItemDialog
 import com.moonwatch.ui.theme.Typography
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -49,15 +43,6 @@ fun TokensWithValueList(
     onItemClick: (TokenWithValue) -> Unit,
     viewModel: MainViewModel = hiltViewModel()
 ) {
-  val tokenBeingDeleted = rememberSaveable { mutableStateOf<Token?>(null) }
-  tokenBeingDeleted.value?.let { token ->
-    DeleteItemDialog(
-        itemName = "${token.name} with all associated alerts",
-        dismiss = { tokenBeingDeleted.value = null },
-        delete = { viewModel.deleteToken(token.address) },
-    )
-  }
-
   val tokensFlow = remember {
     viewModel
         .tokensFlow
@@ -89,7 +74,6 @@ fun TokensWithValueList(
         TokenWithValueListItem(
             tokenWithValue = tokenWithValue,
             onItemClick = onItemClick,
-            onDeleteClick = tokenBeingDeleted::value::set,
         )
       }
 
@@ -118,7 +102,6 @@ fun TokensWithValueList(
 private fun TokenWithValueListItem(
     tokenWithValue: TokenWithValue,
     onItemClick: (TokenWithValue) -> Unit,
-    onDeleteClick: (Token) -> Unit
 ) {
   ListItem(
       icon = { TokenIcon(tokenWithValue.token) },
@@ -131,11 +114,6 @@ private fun TokenWithValueListItem(
               maxLines = 1,
               modifier = Modifier.weight(1f),
           )
-        }
-      },
-      trailing = {
-        IconButton(onClick = { onDeleteClick(tokenWithValue.token) }) {
-          Icon(Icons.Outlined.Delete, "")
         }
       },
       overlineText = {
