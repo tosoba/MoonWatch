@@ -1,5 +1,7 @@
 package com.moonwatch.ui
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -15,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -190,11 +193,19 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
       ) { page ->
         when (bottomNavigationItems[page]) {
           MainBottomNavigationItem.TOKENS -> {
+            val context = LocalContext.current
             TokensWithValueList(
                 onItemClick = {
                   bottomSheetDialogMode = BottomSheetMode.VIEW_TOKEN
                   viewModel.tokenWithValueBeingViewed = it
                   scope.launch { modalBottomSheetState.show() }
+                },
+                onTrailingClick = {
+                  context.startActivity(
+                      Intent(Intent.ACTION_VIEW).apply {
+                        data = Uri.parse("https://poocoin.app/tokens/${it.token.address}")
+                      },
+                  )
                 },
             )
           }

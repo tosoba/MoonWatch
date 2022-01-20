@@ -9,6 +9,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -19,6 +20,7 @@ import coil.annotation.ExperimentalCoilApi
 import com.github.marlonlom.utilities.timeago.TimeAgo
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.moonwatch.MainViewModel
+import com.moonwatch.R
 import com.moonwatch.core.android.ext.toEpochMillisDefault
 import com.moonwatch.core.model.LoadingInProgress
 import com.moonwatch.core.model.WithValue
@@ -41,6 +43,7 @@ import kotlinx.coroutines.flow.map
 )
 fun TokensWithValueList(
     onItemClick: (TokenWithValue) -> Unit,
+    onTrailingClick: (TokenWithValue) -> Unit,
     viewModel: MainViewModel = hiltViewModel()
 ) {
   val tokensFlow = remember {
@@ -74,6 +77,7 @@ fun TokensWithValueList(
         TokenWithValueListItem(
             tokenWithValue = tokenWithValue,
             onItemClick = onItemClick,
+            onTrailingClick = onTrailingClick,
         )
       }
 
@@ -102,6 +106,7 @@ fun TokensWithValueList(
 private fun TokenWithValueListItem(
     tokenWithValue: TokenWithValue,
     onItemClick: (TokenWithValue) -> Unit,
+    onTrailingClick: (TokenWithValue) -> Unit
 ) {
   ListItem(
       icon = { TokenIcon(tokenWithValue.token) },
@@ -124,6 +129,14 @@ private fun TokenWithValueListItem(
         )
       },
       modifier = Modifier.fillMaxWidth().clickable { onItemClick(tokenWithValue) },
+      trailing = {
+        IconButton(onClick = { onTrailingClick(tokenWithValue) }) {
+          Icon(
+              painterResource(R.drawable.ic_baseline_show_chart_24),
+              contentDescription = "",
+          )
+        }
+      },
   ) {
     Text(
         text = tokenWithValue.token.name,
