@@ -236,7 +236,7 @@ fun AddEditAlertBottomSheetContent(
                         viewModel.tokenAlertWithValuesBeingViewed?.alert?.sellPriceTargetUsd
                             ?.toStringInTokenValueScale()
                             ?: ""
-                    sellTargetX = targetX(buyTarget)
+                    sellTargetX = targetX(sellTarget)
                   },
               ) { Icon(Icons.Default.ArrowBack, "") }
             }
