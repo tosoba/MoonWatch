@@ -5,6 +5,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.moonwatch.api.pancakeswap.PancakeswapEndpoints
+import com.moonwatch.core.di.DefaultPancakeswapEndpoints
 import com.moonwatch.core.model.IToken
 import com.moonwatch.core.model.ITokenValue
 import com.moonwatch.core.model.ITokenWithValue
@@ -22,7 +23,7 @@ class TokenRepo
 @Inject
 constructor(
     private val dao: TokenDao,
-    private val pancakeswapEndpoints: PancakeswapEndpoints,
+    @DefaultPancakeswapEndpoints private val pancakeswapEndpoints: PancakeswapEndpoints,
 ) : ITokenRepo {
   override fun getTokensWithValue(pageSize: Int): Flow<PagingData<ITokenWithValue>> =
       Pager(PagingConfig(pageSize = pageSize)) { dao.selectTokensWithLatestValueOrderedByUsdDesc() }

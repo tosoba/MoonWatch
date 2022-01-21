@@ -1,6 +1,10 @@
 package com.moonwatch.api.pancakeswap.di
 
 import com.moonwatch.api.pancakeswap.PancakeswapEndpoints
+import com.moonwatch.core.di.DefaultHttpClient
+import com.moonwatch.core.di.DefaultPancakeswapEndpoints
+import com.moonwatch.core.di.HttpClientWithExtendedTimeouts
+import com.moonwatch.core.di.PancakeswapEndpointsWithExtendedTimeouts
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,10 +23,24 @@ object PancakeswapNetworkModule {
 
   @Provides
   @Singleton
-  fun pancakeswapEndpoints(
+  @DefaultPancakeswapEndpoints
+  fun defaultPancakeswapEndpoints(
       converterFactory: MoshiConverterFactory,
-      httpClient: OkHttpClient,
-  ): PancakeswapEndpoints =
+      @DefaultHttpClient httpClient: OkHttpClient,
+  ): PancakeswapEndpoints = pancakeswapEndpoints(converterFactory, httpClient)
+
+  @Provides
+  @Singleton
+  @PancakeswapEndpointsWithExtendedTimeouts
+  fun pancakeswapEndpointsWithExtendedTimeouts(
+      converterFactory: MoshiConverterFactory,
+      @HttpClientWithExtendedTimeouts httpClient: OkHttpClient,
+  ): PancakeswapEndpoints = pancakeswapEndpoints(converterFactory, httpClient)
+
+  private fun pancakeswapEndpoints(
+      converterFactory: MoshiConverterFactory,
+      httpClient: OkHttpClient
+  ) =
       Retrofit.Builder()
           .baseUrl(PancakeswapEndpoints.BASE_URL)
           .addConverterFactory(converterFactory)

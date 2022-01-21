@@ -11,6 +11,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.moonwatch.api.pancakeswap.PancakeswapEndpoints
 import com.moonwatch.core.android.ext.millisToLocalDateTime
+import com.moonwatch.core.di.PancakeswapEndpointsWithExtendedTimeouts
 import com.moonwatch.core.model.Chain
 import com.moonwatch.core.model.ITokenAlertWithCurrentValue
 import com.moonwatch.core.repo.IAlertRepo
@@ -35,6 +36,7 @@ constructor(
     @Assisted params: WorkerParameters,
     private val alertDao: AlertDao,
     private val tokenDao: TokenDao,
+    @PancakeswapEndpointsWithExtendedTimeouts
     private val pancakeswapEndpoints: PancakeswapEndpoints,
     private val alertRepo: IAlertRepo,
     private val alertNotificationManager: AlertNotificationManager,
