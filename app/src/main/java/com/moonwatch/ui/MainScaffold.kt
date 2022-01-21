@@ -1,5 +1,7 @@
 package com.moonwatch.ui
 
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -222,11 +224,19 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
       ) { page ->
         when (bottomNavigationItems[page]) {
           MainBottomNavigationItem.TOKENS -> {
+            val context = LocalContext.current
             TokensWithValueList(
                 onItemClick = {
                   bottomSheetDialogMode = BottomSheetMode.VIEW_TOKEN
                   viewModel.tokenWithValueBeingViewed = it
                   scope.launch { modalBottomSheetState.show() }
+                },
+                onTrailingClick = {
+                  context.startActivity(
+                      Intent(Intent.ACTION_VIEW).apply {
+                        data = Uri.parse("https://poocoin.app/tokens/${it.token.address}")
+                      },
+                  )
                 },
             )
           }
