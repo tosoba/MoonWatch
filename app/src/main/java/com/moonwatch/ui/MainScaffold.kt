@@ -1,9 +1,7 @@
 package com.moonwatch.ui
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
+import android.widget.Toast
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -15,8 +13,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -26,6 +26,7 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.moonwatch.MainViewModel
+import com.moonwatch.R
 import com.moonwatch.model.Token
 import com.moonwatch.ui.bottom.sheet.*
 import com.moonwatch.ui.dialog.DeleteItemDialog
@@ -137,13 +138,44 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
         modifier = Modifier.nestedScroll(nestedScrollConnection),
         scaffoldState = scaffoldState,
         topBar = {
-          TopAppBar {
-            Text(
-                text = "MoonWatch",
-                style = Typography.h6.copy(fontWeight = FontWeight.Bold),
-                modifier = Modifier.padding(horizontal = 5.dp),
-            )
-          }
+          val useAlarms = viewModel.useAlarmsFlow().collectAsState(initial = false)
+          val context = LocalContext.current
+          TopAppBar(
+              title = {
+                Text(
+                    text = stringResource(R.string.app_name),
+                    style = Typography.h6.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.padding(horizontal = 5.dp),
+                )
+              },
+              actions = {
+                IconButton(
+                    onClick = {
+                      scope.launch {
+                        val toggled = viewModel.toggleUseAlarms()
+                        Toast.makeText(
+                                context,
+                                context.getString(
+                                    if (toggled) R.string.loud_alarms_on
+                                    else R.string.loud_alarms_off,
+                                ),
+                                Toast.LENGTH_SHORT,
+                            )
+                            .show()
+                      }
+                    },
+                    modifier = Modifier.wrapContentSize(),
+                ) {
+                  Icon(
+                      painterResource(
+                          if (useAlarms.value) R.drawable.ic_baseline_alarm_on_24
+                          else R.drawable.ic_baseline_alarm_off_24,
+                      ),
+                      "",
+                  )
+                }
+              },
+          )
         },
         bottomBar = {
           BottomAppBar(

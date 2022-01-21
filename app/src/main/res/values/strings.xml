@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">MoonWatch</string>
+    <string name="loud_alarms_on">Loud alarms turned on.</string>
+    <string name="loud_alarms_off">Loud alarms turned off.</string>
 </resources>

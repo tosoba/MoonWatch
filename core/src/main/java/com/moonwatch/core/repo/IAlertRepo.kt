@@ -22,4 +22,8 @@ interface IAlertRepo {
   suspend fun toggleAlertActive(id: Long)
 
   suspend fun updateAlert(id: Long, sellPriceTargetUsd: BigDecimal?, buyPriceTargetUsd: BigDecimal?)
+
+  val useAlarmsFlow: Flow<Boolean>
+
+  suspend fun toggleUseAlarms():Boolean
 }

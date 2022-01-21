@@ -37,6 +37,8 @@ constructor(
     private val getAlert: GetAlert,
     getAlertsFlow: GetAlertsFlow,
     getTokensFlow: GetTokensFlow,
+    val useAlarmsFlow: UseAlarmsFlow,
+    val toggleUseAlarms: ToggleUseAlarms,
 ) : ViewModel() {
   private val _tokenAddress = MutableStateFlow("")
   val tokenAddress: Flow<String>

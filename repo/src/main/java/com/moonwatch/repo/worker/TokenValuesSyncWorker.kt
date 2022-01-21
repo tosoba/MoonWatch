@@ -6,7 +6,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
@@ -14,10 +13,10 @@ import com.moonwatch.api.pancakeswap.PancakeswapEndpoints
 import com.moonwatch.core.android.ext.millisToLocalDateTime
 import com.moonwatch.core.model.Chain
 import com.moonwatch.core.model.ITokenAlertWithCurrentValue
+import com.moonwatch.core.repo.IAlertRepo
 import com.moonwatch.db.dao.AlertDao
 import com.moonwatch.db.dao.TokenDao
 import com.moonwatch.db.entity.TokenValueEntity
-import com.moonwatch.repo.dataStore
 import com.moonwatch.repo.notification.AlertNotificationManager
 import com.moonwatch.repo.receiver.TokenAlertBroadcastReceiver
 import dagger.assisted.Assisted
@@ -25,7 +24,6 @@ import dagger.assisted.AssistedInject
 import java.util.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.map
 import org.threeten.bp.LocalDateTime
 import timber.log.Timber
 
@@ -38,6 +36,7 @@ constructor(
     private val alertDao: AlertDao,
     private val tokenDao: TokenDao,
     private val pancakeswapEndpoints: PancakeswapEndpoints,
+    private val alertRepo: IAlertRepo,
     private val alertNotificationManager: AlertNotificationManager,
 ) : CoroutineWorker(ctx, params) {
   override suspend fun doWork(): Result {
@@ -124,13 +123,7 @@ constructor(
   }
 
   private suspend fun shouldTriggerAlarm(): Boolean {
-    val useAlarms =
-        applicationContext
-            .dataStore
-            .data
-            .map { preferences -> preferences[booleanPreferencesKey("USE_ALARMS")] ?: false }
-            .firstOrNull()
-            ?: false
+    val useAlarms = alertRepo.useAlarmsFlow.firstOrNull() ?: false
     val alarmManager = applicationContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
       useAlarms && alarmManager.canScheduleExactAlarms()
