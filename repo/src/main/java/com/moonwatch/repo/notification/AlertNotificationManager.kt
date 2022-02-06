@@ -29,11 +29,9 @@ constructor(
   ) {
     val alertsCount = sellAlerts.size + buyAlerts.size
     val sellNotifications =
-        sellAlerts
-            .map { it.alert.id to buildNotificationFor(it, ::sellNotificationTitleFor) }
-            .toMap()
+        sellAlerts.associate { it.alert.id to buildNotificationFor(it, ::sellNotificationTitleFor) }
     val buyNotifications =
-        buyAlerts.map { it.alert.id to buildNotificationFor(it, ::buyNotificationTitleFor) }.toMap()
+        buyAlerts.associate { it.alert.id to buildNotificationFor(it, ::buyNotificationTitleFor) }
     NotificationManagerCompat.from(context).apply {
       sellNotifications.entries.forEach { (alertId, notification) ->
         notify(alertId.toInt(), notification)
@@ -55,6 +53,7 @@ constructor(
                             "${sellAlerts.size} sell targets hit. ${buyAlerts.size} buy targets hit."))
                 .setGroup(GROUP_KEY)
                 .setGroupSummary(true)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setSmallIcon(android.R.drawable.ic_dialog_alert)
                 .build()
         notify(SUMMARY_NOTIFICATION_ID, summaryNotification)
@@ -85,6 +84,7 @@ constructor(
           )
           .setSmallIcon(android.R.drawable.ic_dialog_alert)
           .setAutoCancel(true)
+          .setPriority(NotificationCompat.PRIORITY_MAX)
           .setGroup(GROUP_KEY)
           .build()
 
@@ -113,8 +113,12 @@ constructor(
               NotificationChannel(
                       CHANNEL_ID,
                       context.getString(R.string.alert_channel_name),
-                      NotificationManager.IMPORTANCE_DEFAULT)
-                  .apply { description = context.getString(R.string.alert_channel_description) },
+                      NotificationManager.IMPORTANCE_HIGH,
+                  )
+                  .apply {
+                    description = context.getString(R.string.alert_channel_description)
+                    setBypassDnd(true)
+                  },
           )
     }
   }
