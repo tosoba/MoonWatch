@@ -5,6 +5,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.os.Build
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
@@ -22,7 +23,6 @@ import com.moonwatch.repo.notification.AlertNotificationManager
 import com.moonwatch.repo.receiver.TokenAlertBroadcastReceiver
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import java.util.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
 import org.threeten.bp.LocalDateTime
@@ -125,12 +125,14 @@ constructor(
   }
 
   private suspend fun shouldTriggerAlarm(): Boolean {
-    val useAlarms = alertRepo.useAlarmsFlow.firstOrNull() ?: false
+    val useAlarms = alertRepo.useAlarmsFlow.firstOrNull() ?: return false
     val alarmManager = applicationContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+    val audioManager = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    val silentOrVibrateMode = audioManager.ringerMode != AudioManager.RINGER_MODE_NORMAL
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-      useAlarms && alarmManager.canScheduleExactAlarms()
+      useAlarms && silentOrVibrateMode && alarmManager.canScheduleExactAlarms()
     } else {
-      useAlarms
+      useAlarms && silentOrVibrateMode
     }
   }
 }
