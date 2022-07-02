@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import androidx.paging.map
 import com.moonwatch.core.android.delegate.mutableStateOf
 import com.moonwatch.core.android.model.LoadableParcelable
@@ -59,6 +60,7 @@ constructor(
       getAlertsFlow(pageSize = 20)
           .map { it.map(::TokenAlertWithValues) }
           .distinctUntilChanged()
+          .cachedIn(viewModelScope)
           .map(PagingData<TokenAlertWithValues>::loadable)
           .onStart { emit(LoadingFirst) }
 
@@ -66,6 +68,7 @@ constructor(
       getTokensFlow(pageSize = 20)
           .map { it.map(::TokenWithValue) }
           .distinctUntilChanged()
+          .cachedIn(viewModelScope)
           .map(PagingData<TokenWithValue>::loadable)
           .onStart { emit(LoadingFirst) }
 
