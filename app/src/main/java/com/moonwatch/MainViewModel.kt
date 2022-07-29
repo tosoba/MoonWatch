@@ -15,12 +15,12 @@ import com.moonwatch.core.usecase.*
 import com.moonwatch.model.TokenAlertWithValues
 import com.moonwatch.model.TokenWithValue
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.math.BigDecimal
+import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.math.BigDecimal
-import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
@@ -107,11 +107,13 @@ constructor(
   suspend fun saveTokenCurrentlyBeingAdded() {
     when (val tokenWithValue = tokenWithValueBeingAdded.loadable) {
       is Ready<TokenWithValue> -> {
-        saveTokenWithValue(
-            token = tokenWithValue.value.token,
-            value = tokenWithValue.value.value,
-        )
+        val savedTokenWithValue =
+            saveTokenWithValue(
+                token = tokenWithValue.value.token,
+                value = tokenWithValue.value.value,
+            )
         clearTokenBeingAddedAddress()
+        tokenWithValueBeingViewed = TokenWithValue(savedTokenWithValue)
       }
       else -> throw IllegalStateException()
     }

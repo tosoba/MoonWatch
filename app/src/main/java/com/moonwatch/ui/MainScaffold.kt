@@ -34,10 +34,10 @@ import com.moonwatch.ui.dialog.DeleteItemDialog
 import com.moonwatch.ui.list.TokenAlertsList
 import com.moonwatch.ui.list.TokensWithValueList
 import com.moonwatch.ui.theme.Typography
+import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 
 @Composable
 @OptIn(ExperimentalMaterialApi::class, ExperimentalPagerApi::class)
@@ -98,10 +98,7 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
           BottomSheetMode.ADD_TOKEN -> {
             SaveTokenBottomSheetContent(
                 modalBottomSheetState,
-                onAddAlertClick = {
-                  viewModel.tokenWithValueBeingViewed = it
-                  bottomSheetDialogMode = BottomSheetMode.ADD_ALERT
-                },
+                onAddAlertClick = { bottomSheetDialogMode = BottomSheetMode.ADD_ALERT },
             )
           }
           BottomSheetMode.VIEW_TOKEN -> {

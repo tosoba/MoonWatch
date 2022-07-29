@@ -19,10 +19,10 @@ import com.moonwatch.core.model.LoadingInProgress
 import com.moonwatch.core.model.Ready
 import com.moonwatch.model.TokenWithValue
 import com.moonwatch.ui.RetryLoadingTokenButton
+import java.io.IOException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
-import java.io.IOException
 
 @Composable
 @OptIn(ExperimentalMaterialApi::class)
@@ -118,8 +118,10 @@ fun SaveTokenBottomSheetContent(
           Box(modifier = Modifier.size(5.dp))
           OutlinedButton(
               onClick = {
-                scope.launch { viewModel.saveTokenCurrentlyBeingAdded() }
-                onAddAlertClick(tokenWithValue.value)
+                scope.launch {
+                  viewModel.saveTokenCurrentlyBeingAdded()
+                  onAddAlertClick(tokenWithValue.value)
+                }
               },
               modifier = Modifier.weight(1f),
           ) {
