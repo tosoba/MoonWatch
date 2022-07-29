@@ -2,8 +2,8 @@ package com.moonwatch.core.repo
 
 import androidx.paging.PagingData
 import com.moonwatch.core.model.ITokenAlertWithValues
-import java.math.BigDecimal
 import kotlinx.coroutines.flow.Flow
+import java.math.BigDecimal
 
 interface IAlertRepo {
   fun getTokenAlertsWithValues(pageSize: Int): Flow<PagingData<ITokenAlertWithValues>>
@@ -25,5 +25,5 @@ interface IAlertRepo {
 
   val useAlarmsFlow: Flow<Boolean>
 
-  suspend fun toggleUseAlarms():Boolean
+  suspend fun toggleUseAlarms(): Boolean
 }

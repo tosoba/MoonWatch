@@ -14,9 +14,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
-import coil.annotation.ExperimentalCoilApi
 import com.github.marlonlom.utilities.timeago.TimeAgo
-import com.google.accompanist.pager.ExperimentalPagerApi
 import com.moonwatch.MainViewModel
 import com.moonwatch.core.android.ext.toEpochMillisDefault
 import com.moonwatch.core.model.LoadingInProgress
@@ -24,27 +22,18 @@ import com.moonwatch.core.model.WithValue
 import com.moonwatch.model.TokenAlertWithValues
 import com.moonwatch.ui.TokenIcon
 import com.moonwatch.ui.theme.Typography
-import java.math.BigDecimal
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
+import java.math.BigDecimal
 
 @Composable
-@OptIn(
-    ExperimentalCoroutinesApi::class,
-    ExperimentalMaterialApi::class,
-    ExperimentalPagerApi::class,
-    FlowPreview::class,
-)
 fun TokenAlertsList(
     onItemClick: (TokenAlertWithValues) -> Unit,
     viewModel: MainViewModel = hiltViewModel()
 ) {
   val alertsFlow = remember {
-    viewModel
-        .alertsFlow
+    viewModel.alertsFlow
         .filterIsInstance<WithValue<PagingData<TokenAlertWithValues>>>()
         .map(WithValue<PagingData<TokenAlertWithValues>>::value::get)
   }
@@ -92,12 +81,7 @@ fun TokenAlertsList(
 }
 
 @Composable
-@OptIn(
-    ExperimentalCoilApi::class,
-    ExperimentalCoroutinesApi::class,
-    ExperimentalMaterialApi::class,
-    FlowPreview::class,
-)
+@OptIn(ExperimentalMaterialApi::class)
 private fun TokenAlertWithValueListItem(
     tokenAlertWithValue: TokenAlertWithValues,
     onItemClick: (TokenAlertWithValues) -> Unit,

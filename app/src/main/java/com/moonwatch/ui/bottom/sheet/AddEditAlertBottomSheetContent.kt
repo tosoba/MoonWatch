@@ -22,14 +22,12 @@ import com.moonwatch.model.TokenAlertWithValues
 import com.moonwatch.ui.PriceTargetXText
 import com.moonwatch.ui.dialog.DeleteItemDialog
 import com.moonwatch.ui.dialog.PriceTargetValidationMessagesDialog
+import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.math.RoundingMode
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.launch
 
 @Composable
-@OptIn(ExperimentalCoroutinesApi::class, ExperimentalMaterialApi::class, FlowPreview::class)
+@OptIn(ExperimentalMaterialApi::class)
 fun AddEditAlertBottomSheetContent(
     modalBottomSheetState: ModalBottomSheetState,
     alertBottomSheetMode: AlertBottomSheetMode,
@@ -82,7 +80,9 @@ fun AddEditAlertBottomSheetContent(
             when (alertBottomSheetMode) {
               AlertBottomSheetMode.ADD -> ""
               AlertBottomSheetMode.EDIT -> {
-                viewModel.tokenAlertWithValuesBeingViewed?.alert?.sellPriceTargetUsd
+                viewModel.tokenAlertWithValuesBeingViewed
+                    ?.alert
+                    ?.sellPriceTargetUsd
                     ?.toStringInTokenValueScale()
                     ?: ""
               }
@@ -98,7 +98,9 @@ fun AddEditAlertBottomSheetContent(
             when (alertBottomSheetMode) {
               AlertBottomSheetMode.ADD -> ""
               AlertBottomSheetMode.EDIT -> {
-                viewModel.tokenAlertWithValuesBeingViewed?.alert?.buyPriceTargetUsd
+                viewModel.tokenAlertWithValuesBeingViewed
+                    ?.alert
+                    ?.buyPriceTargetUsd
                     ?.toStringInTokenValueScale()
                     ?: ""
               }
@@ -116,12 +118,16 @@ fun AddEditAlertBottomSheetContent(
       rememberSaveable(
           viewModel.tokenWithValueBeingViewed,
           viewModel.tokenAlertWithValuesBeingViewed,
-      ) { mutableStateOf(targetX(sellTarget)) }
+      ) {
+        mutableStateOf(targetX(sellTarget))
+      }
   var buyTargetX by
       rememberSaveable(
           viewModel.tokenWithValueBeingViewed,
           viewModel.tokenAlertWithValuesBeingViewed,
-      ) { mutableStateOf(targetX(buyTarget)) }
+      ) {
+        mutableStateOf(targetX(buyTarget))
+      }
 
   val scrollState = rememberScrollState()
 
@@ -129,7 +135,9 @@ fun AddEditAlertBottomSheetContent(
       rememberSaveable(
           viewModel.tokenWithValueBeingViewed,
           viewModel.tokenAlertWithValuesBeingViewed,
-      ) { mutableStateOf(emptyList<String>()) }
+      ) {
+        mutableStateOf(emptyList<String>())
+      }
   if (priceTargetValidationMessages.isNotEmpty()) {
     PriceTargetValidationMessagesDialog(messages = priceTargetValidationMessages) {
       priceTargetValidationMessages = emptyList()
@@ -175,19 +183,25 @@ fun AddEditAlertBottomSheetContent(
               IconButton(
                   onClick = {
                     buyTarget =
-                        viewModel.tokenAlertWithValuesBeingViewed?.alert?.buyPriceTargetUsd
+                        viewModel.tokenAlertWithValuesBeingViewed
+                            ?.alert
+                            ?.buyPriceTargetUsd
                             ?.toStringInTokenValueScale()
                             ?: ""
                     buyTargetX = targetX(buyTarget)
                   },
-              ) { Icon(Icons.Default.ArrowBack, "") }
+              ) {
+                Icon(Icons.Default.ArrowBack, "")
+              }
             }
             IconButton(
                 onClick = {
                   buyTarget = ""
                   buyTargetX = BigDecimal.ONE
                 },
-            ) { Icon(Icons.Default.Clear, "") }
+            ) {
+              Icon(Icons.Default.Clear, "")
+            }
           }
         },
         modifier = Modifier.fillMaxWidth(),
@@ -203,7 +217,9 @@ fun AddEditAlertBottomSheetContent(
             buyTarget = (tokenValueForCalculations.usd * buyTargetX).toStringInTokenValueScale()
           },
           modifier = Modifier.weight(1f),
-      ) { Text("-0.1X") }
+      ) {
+        Text("-0.1X")
+      }
       OutlinedButton(
           enabled = buyTargetX < BigDecimal.ONE && isTargetValidOrEmpty(buyTarget),
           onClick = {
@@ -211,7 +227,9 @@ fun AddEditAlertBottomSheetContent(
             buyTarget = (tokenValueForCalculations.usd * buyTargetX).toStringInTokenValueScale()
           },
           modifier = Modifier.weight(1f),
-      ) { Text("+0.1X") }
+      ) {
+        Text("+0.1X")
+      }
       PriceTargetXText(buyTargetX)
     }
 
@@ -233,19 +251,25 @@ fun AddEditAlertBottomSheetContent(
               IconButton(
                   onClick = {
                     sellTarget =
-                        viewModel.tokenAlertWithValuesBeingViewed?.alert?.sellPriceTargetUsd
+                        viewModel.tokenAlertWithValuesBeingViewed
+                            ?.alert
+                            ?.sellPriceTargetUsd
                             ?.toStringInTokenValueScale()
                             ?: ""
                     sellTargetX = targetX(sellTarget)
                   },
-              ) { Icon(Icons.Default.ArrowBack, "") }
+              ) {
+                Icon(Icons.Default.ArrowBack, "")
+              }
             }
             IconButton(
                 onClick = {
                   sellTarget = ""
                   sellTargetX = BigDecimal.ONE
                 },
-            ) { Icon(Icons.Default.Clear, "") }
+            ) {
+              Icon(Icons.Default.Clear, "")
+            }
           }
         },
         modifier = Modifier.fillMaxWidth(),
@@ -261,7 +285,9 @@ fun AddEditAlertBottomSheetContent(
             sellTarget = (tokenValueForCalculations.usd * sellTargetX).toStringInTokenValueScale()
           },
           modifier = Modifier.weight(1f),
-      ) { Text("-1X") }
+      ) {
+        Text("-1X")
+      }
       OutlinedButton(
           enabled = sellTargetX > BigDecimal.ONE && isTargetValidOrEmpty(sellTarget),
           onClick = {
@@ -269,7 +295,9 @@ fun AddEditAlertBottomSheetContent(
             sellTarget = (tokenValueForCalculations.usd * sellTargetX).toStringInTokenValueScale()
           },
           modifier = Modifier.weight(1f),
-      ) { Text("-0.1X") }
+      ) {
+        Text("-0.1X")
+      }
       OutlinedButton(
           enabled = isTargetValidOrEmpty(sellTarget),
           onClick = {
@@ -277,7 +305,9 @@ fun AddEditAlertBottomSheetContent(
             sellTarget = (tokenValueForCalculations.usd * sellTargetX).toStringInTokenValueScale()
           },
           modifier = Modifier.weight(1f),
-      ) { Text("+0.1X") }
+      ) {
+        Text("+0.1X")
+      }
       OutlinedButton(
           enabled = isTargetValidOrEmpty(sellTarget),
           onClick = {
@@ -285,7 +315,9 @@ fun AddEditAlertBottomSheetContent(
             sellTarget = (tokenValueForCalculations.usd * sellTargetX).toStringInTokenValueScale()
           },
           modifier = Modifier.weight(1f),
-      ) { Text("+1X") }
+      ) {
+        Text("+1X")
+      }
       PriceTargetXText(sellTargetX)
     }
 
@@ -295,7 +327,9 @@ fun AddEditAlertBottomSheetContent(
         OutlinedButton(
             onClick = { tokenAlertBeingDeleted = viewModel.tokenAlertWithValuesBeingViewed },
             modifier = Modifier.weight(1f),
-        ) { Text(text = "Delete") }
+        ) {
+          Text(text = "Delete")
+        }
         Box(Modifier.size(5.dp))
       }
       OutlinedButton(
@@ -342,7 +376,9 @@ fun AddEditAlertBottomSheetContent(
             }
           },
           modifier = Modifier.weight(1f),
-      ) { Text(text = "Save") }
+      ) {
+        Text(text = "Save")
+      }
     }
 
     Box(modifier = Modifier.height(15.dp))

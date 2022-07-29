@@ -2,10 +2,9 @@ package com.moonwatch.model
 
 import android.os.Parcelable
 import com.moonwatch.core.model.ITokenAlert
-import java.math.BigDecimal
-import java.util.*
 import kotlinx.parcelize.Parcelize
 import org.threeten.bp.LocalDateTime
+import java.math.BigDecimal
 
 @Parcelize
 data class TokenAlert(

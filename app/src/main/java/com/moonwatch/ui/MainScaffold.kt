@@ -23,7 +23,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.annotation.ExperimentalCoilApi
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
@@ -35,21 +34,13 @@ import com.moonwatch.ui.dialog.DeleteItemDialog
 import com.moonwatch.ui.list.TokenAlertsList
 import com.moonwatch.ui.list.TokensWithValueList
 import com.moonwatch.ui.theme.Typography
-import kotlin.math.roundToInt
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 @Composable
-@OptIn(
-    ExperimentalCoilApi::class,
-    ExperimentalCoroutinesApi::class,
-    ExperimentalMaterialApi::class,
-    ExperimentalPagerApi::class,
-    FlowPreview::class,
-)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalPagerApi::class)
 fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
   val scope = rememberCoroutineScope()
   val pageState = rememberPagerState()
@@ -75,8 +66,7 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
   }
 
   LaunchedEffect(Unit) {
-    viewModel
-        .showAlertBottomSheet
+    viewModel.showAlertBottomSheet
         .onEach {
           pageState.animateScrollToPage(
               MainBottomNavigationItem.values().indexOf(MainBottomNavigationItem.ALERTS))
@@ -214,7 +204,9 @@ fun MainScaffold(viewModel: MainViewModel = hiltViewModel()) {
               },
               modifier =
                   Modifier.offset { IntOffset(x = 0, y = bottomAppBarOffsetHeightPx.roundToInt()) },
-          ) { Icon(Icons.Filled.Add, "") }
+          ) {
+            Icon(Icons.Filled.Add, "")
+          }
         },
     ) {
       HorizontalPager(

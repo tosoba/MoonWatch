@@ -14,9 +14,9 @@ import com.moonwatch.db.dao.TokenDao
 import com.moonwatch.db.entity.TokenEntity
 import com.moonwatch.db.entity.TokenValueEntity
 import dagger.Reusable
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
 @Reusable
 class TokenRepo
