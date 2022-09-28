@@ -9,6 +9,6 @@ import kotlinx.coroutines.flow.Flow
 interface ITokenRepo {
   fun getTokensWithValue(pageSize: Int): Flow<PagingData<ITokenWithValue>>
   suspend fun getTokenWithValueByAddress(address: String): ITokenWithValue
-  suspend fun saveTokenWithValue(token: IToken, value: ITokenValue)
+  suspend fun saveTokenWithValue(token: IToken, value: ITokenValue): ITokenWithValue
   suspend fun deleteTokenByAddress(address: String)
 }

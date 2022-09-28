@@ -3,9 +3,9 @@ package com.moonwatch.db
 import androidx.room.TypeConverter
 import com.moonwatch.core.android.ext.millisToLocalDateTime
 import com.moonwatch.core.model.Chain
-import java.math.BigDecimal
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.ZoneId
+import java.math.BigDecimal
 
 object Converters {
   @TypeConverter fun toChain(value: String?): Chain? = value?.let { enumValueOf<Chain>(it) }

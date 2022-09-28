@@ -4,11 +4,11 @@ import com.moonwatch.core.exception.InvalidAddressException
 import com.moonwatch.core.model.*
 import com.moonwatch.core.repo.ITokenRepo
 import dagger.Reusable
-import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.withTimeout
+import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
 @Reusable

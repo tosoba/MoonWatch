@@ -7,9 +7,9 @@ import androidx.room.Query
 import com.moonwatch.db.entity.TokenAlertEntity
 import com.moonwatch.db.result.TokenAlertWithCurrentValue
 import com.moonwatch.db.result.TokenAlertWithValues
-import java.math.BigDecimal
 import kotlinx.coroutines.flow.Flow
 import org.threeten.bp.LocalDateTime
+import java.math.BigDecimal
 
 @Dao
 interface AlertDao {

@@ -1,7 +1,7 @@
 package com.moonwatch.core.model
 
-import java.math.BigDecimal
 import org.threeten.bp.LocalDateTime
+import java.math.BigDecimal
 
 interface ITokenAlert {
   val id: Long

@@ -12,12 +12,12 @@ import org.threeten.bp.LocalDateTime
 interface TokenDao {
   @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertToken(token: TokenEntity)
 
-  @Insert suspend fun insertTokenValue(value: TokenValueEntity)
+  @Insert suspend fun insertTokenValue(value: TokenValueEntity): Long
 
   @Transaction
-  suspend fun insertTokenWithValue(token: TokenEntity, value: TokenValueEntity) {
+  suspend fun insertTokenWithValue(token: TokenEntity, value: TokenValueEntity): Long {
     insertToken(token)
-    insertTokenValue(value)
+    return insertTokenValue(value)
   }
 
   @Insert suspend fun insertTokenValues(tokenValues: List<TokenValueEntity>)

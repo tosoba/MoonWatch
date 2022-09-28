@@ -14,11 +14,11 @@ import com.moonwatch.db.dao.AlertDao
 import com.moonwatch.db.entity.TokenAlertEntity
 import dagger.Reusable
 import dagger.hilt.android.qualifiers.ApplicationContext
-import java.math.BigDecimal
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.threeten.bp.LocalDateTime
+import java.math.BigDecimal
+import javax.inject.Inject
 
 @Reusable
 class AlertRepo
@@ -83,9 +83,10 @@ constructor(
         context.dataStore.data.map { preferences -> preferences[useAlarmsPreferencesKey] ?: false }
 
   override suspend fun toggleUseAlarms(): Boolean =
-      context.dataStore.edit { preferences ->
-        val useAlarms = preferences[useAlarmsPreferencesKey] ?: false
-        preferences[useAlarmsPreferencesKey] = !useAlarms
-      }[useAlarmsPreferencesKey]
+      context.dataStore
+          .edit { preferences ->
+            val useAlarms = preferences[useAlarmsPreferencesKey] ?: false
+            preferences[useAlarmsPreferencesKey] = !useAlarms
+          }[useAlarmsPreferencesKey]
           ?: false
 }

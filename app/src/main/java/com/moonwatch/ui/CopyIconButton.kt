@@ -22,5 +22,7 @@ fun CopyIconButton(text: String, toastText: String) {
           Toast.makeText(context, toastText, Toast.LENGTH_SHORT).show()
         }
       },
-  ) { Icon(painterResource(R.drawable.ic_baseline_content_copy_24), "") }
+  ) {
+    Icon(painterResource(R.drawable.ic_baseline_content_copy_24), "")
+  }
 }

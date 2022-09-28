@@ -13,6 +13,7 @@ import com.moonwatch.core.repo.ITokenRepo
 import com.moonwatch.db.dao.TokenDao
 import com.moonwatch.db.entity.TokenEntity
 import com.moonwatch.db.entity.TokenValueEntity
+import com.moonwatch.db.result.TokenWithValue
 import dagger.Reusable
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
@@ -33,8 +34,11 @@ constructor(
   override suspend fun getTokenWithValueByAddress(address: String): ITokenWithValue =
       pancakeswapEndpoints.getToken(address).also { it.tokenAddress = address }
 
-  override suspend fun saveTokenWithValue(token: IToken, value: ITokenValue) {
-    dao.insertTokenWithValue(TokenEntity(token), TokenValueEntity(value))
+  override suspend fun saveTokenWithValue(token: IToken, value: ITokenValue): ITokenWithValue {
+    val tokenEntity = TokenEntity(token)
+    val tokenValueEntity = TokenValueEntity(value)
+    val tokenValueId = dao.insertTokenWithValue(tokenEntity, tokenValueEntity)
+    return TokenWithValue(tokenEntity, tokenValueEntity.apply { id = tokenValueId })
   }
 
   override suspend fun deleteTokenByAddress(address: String) {

@@ -107,11 +107,13 @@ constructor(
   suspend fun saveTokenCurrentlyBeingAdded() {
     when (val tokenWithValue = tokenWithValueBeingAdded.loadable) {
       is Ready<TokenWithValue> -> {
-        saveTokenWithValue(
-            token = tokenWithValue.value.token,
-            value = tokenWithValue.value.value,
-        )
+        val savedTokenWithValue =
+            saveTokenWithValue(
+                token = tokenWithValue.value.token,
+                value = tokenWithValue.value.value,
+            )
         clearTokenBeingAddedAddress()
+        tokenWithValueBeingViewed = TokenWithValue(savedTokenWithValue)
       }
       else -> throw IllegalStateException()
     }

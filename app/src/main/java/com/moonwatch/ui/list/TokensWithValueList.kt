@@ -16,9 +16,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
-import coil.annotation.ExperimentalCoilApi
 import com.github.marlonlom.utilities.timeago.TimeAgo
-import com.google.accompanist.pager.ExperimentalPagerApi
 import com.moonwatch.MainViewModel
 import com.moonwatch.R
 import com.moonwatch.core.android.ext.toEpochMillisDefault
@@ -27,28 +25,18 @@ import com.moonwatch.core.model.WithValue
 import com.moonwatch.model.TokenWithValue
 import com.moonwatch.ui.TokenIcon
 import com.moonwatch.ui.theme.Typography
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 
 @Composable
-@OptIn(
-    ExperimentalCoilApi::class,
-    ExperimentalCoroutinesApi::class,
-    ExperimentalMaterialApi::class,
-    ExperimentalPagerApi::class,
-    FlowPreview::class,
-)
 fun TokensWithValueList(
     onItemClick: (TokenWithValue) -> Unit,
     onTrailingClick: (TokenWithValue) -> Unit,
     viewModel: MainViewModel = hiltViewModel()
 ) {
   val tokensFlow = remember {
-    viewModel
-        .tokensFlow
+    viewModel.tokensFlow
         .filterIsInstance<WithValue<PagingData<TokenWithValue>>>()
         .map(WithValue<PagingData<TokenWithValue>>::value::get)
   }
@@ -97,12 +85,7 @@ fun TokensWithValueList(
 }
 
 @Composable
-@OptIn(
-    ExperimentalCoilApi::class,
-    ExperimentalCoroutinesApi::class,
-    ExperimentalMaterialApi::class,
-    FlowPreview::class,
-)
+@OptIn(ExperimentalMaterialApi::class)
 private fun TokenWithValueListItem(
     tokenWithValue: TokenWithValue,
     onItemClick: (TokenWithValue) -> Unit,

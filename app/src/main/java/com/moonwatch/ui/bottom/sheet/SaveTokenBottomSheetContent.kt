@@ -20,14 +20,12 @@ import com.moonwatch.core.model.Ready
 import com.moonwatch.model.TokenWithValue
 import com.moonwatch.ui.RetryLoadingTokenButton
 import java.io.IOException
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 
 @Composable
-@OptIn(ExperimentalCoroutinesApi::class, ExperimentalMaterialApi::class, FlowPreview::class)
+@OptIn(ExperimentalMaterialApi::class)
 fun SaveTokenBottomSheetContent(
     modalBottomSheetState: ModalBottomSheetState,
     onAddAlertClick: (TokenWithValue) -> Unit,
@@ -114,26 +112,36 @@ fun SaveTokenBottomSheetContent(
                 }
               },
               modifier = Modifier.weight(1f),
-          ) { Text(text = "Save") }
+          ) {
+            Text(text = "Save")
+          }
           Box(modifier = Modifier.size(5.dp))
           OutlinedButton(
               onClick = {
-                scope.launch { viewModel.saveTokenCurrentlyBeingAdded() }
-                onAddAlertClick(tokenWithValue.value)
+                scope.launch {
+                  viewModel.saveTokenCurrentlyBeingAdded()
+                  onAddAlertClick(tokenWithValue.value)
+                }
               },
               modifier = Modifier.weight(1f),
-          ) { Text(text = "Add an alert") }
+          ) {
+            Text(text = "Add an alert")
+          }
         }
         OutlinedButton(
             onClick = { scope.launch { viewModel.clearTokenBeingAddedAddress() } },
             modifier = Modifier.fillMaxWidth(),
-        ) { Text(text = "Clear") }
+        ) {
+          Text(text = "Clear")
+        }
       }
       is LoadingInProgress -> {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier.fillMaxWidth().padding(10.dp),
-        ) { CircularProgressIndicator() }
+        ) {
+          CircularProgressIndicator()
+        }
       }
       else -> return@Column
     }

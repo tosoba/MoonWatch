@@ -10,11 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 
 @Composable
-@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 fun DeleteItemDialog(itemName: String, dismiss: () -> Unit, delete: () -> Unit) {
   AlertDialog(
       onDismissRequest = dismiss,
@@ -33,12 +30,16 @@ fun DeleteItemDialog(itemName: String, dismiss: () -> Unit, delete: () -> Unit) 
                 dismiss()
                 Toast.makeText(context, "$itemName was deleted.", Toast.LENGTH_SHORT).show()
               },
-          ) { Text("Confirm") }
+          ) {
+            Text("Confirm")
+          }
           Box(Modifier.size(5.dp))
           OutlinedButton(
               modifier = Modifier.weight(1f),
               onClick = dismiss,
-          ) { Text("Cancel") }
+          ) {
+            Text("Cancel")
+          }
         }
       },
   )

@@ -2,8 +2,8 @@ package com.moonwatch.db.entity
 
 import androidx.room.*
 import com.moonwatch.core.model.ITokenAlert
-import java.math.BigDecimal
 import org.threeten.bp.LocalDateTime
+import java.math.BigDecimal
 
 @Entity(
     tableName = "token_alert",
